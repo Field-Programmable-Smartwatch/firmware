@@ -1,36 +1,30 @@
-CROSS_PREFIX = ../../compiler/cross/bin/arm-none-eabi-
+CROSS_PATH = ../../compiler/cross/bin/
+CROSS_PREFIX = ${CROSS_PATH}arm-none-eabi-
 GCC = ${CROSS_PREFIX}gcc
 LD = ${CROSS_PREFIX}ld
 OBJCOPY =${CROSS_PREFIX}objcopy
 
 CPU = cortex-m4
-
-CFLAGS = -c -ffreestanding -nostdlib -mcpu=${CPU} -I./include
+DRIVER_PATH = ../drivers
+INCLUDE = -I./include -I${DRIVER_PATH}/gpio/
+CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=${CPU} ${INCLUDE} -MMD
 LDFLAGS = -static -T linker.ld 
 
-all: build link objcopy
+SOURCES = $(wildcard *.c) $(wildcard ${DRIVER_PATH}/*/*.c)
+OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
+DEPENDS = $(patsubst %.c,%.d,$(SOURCES))
+
+all: led-blink.bin
 
 clean:
-	rm -f *.o *.elf *.bin
+	rm -f ${OBJECTS} ${DEPENDS} *.elf *.bin
 
+-include ${DEPENDS}
+%.o: %.c Makefile
+	${GCC} ${CFLAGS} -o $@ $<
 
-%.o: %.c
-	${GCC} ${CFLAGS} -o $@ $^
+led-blink.elf: ${OBJECTS}
+	${LD} ${LDFLAGS} -o $@ $^
 
-build: main.o interrupt_handlers.o
-
-
-
-
-led-blink.elf: main.o interrupt_handlers.o
-	${LD} ${LDFLAGS} -o $@ $^ 
-
-link: led-blink.elf
-
-
-
-
-led_blink.bin: led-blink.elf
+led-blink.bin: led-blink.elf
 	${OBJCOPY} $^ -O binary $@
-
-objcopy: led_blink.bin

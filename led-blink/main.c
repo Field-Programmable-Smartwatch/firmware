@@ -1,36 +1,33 @@
 #include <stm32wb55xx.h>
 #include <stdint.h>
 
+#include <gpio.h>
 
-void led_turn_on()
+void led_on()
 {
-    GPIOA->BSRR |= GPIO_BSRR_BS14;
+    gpio_write(GPIOA, 14, 1);
 }
 
-void led_turn_off()
+void led_off()
 {
-    GPIOA->BSRR |= GPIO_BSRR_BR14;
-}
-
-void init_gpio()
-{
-    // Enable GPIO PORT A Clock
-    RCC->AHB2RSTR |= RCC_AHB2ENR_GPIOAEN;
-    
-    // Set Port A Pin 14 to Output
-    GPIOA->MODER |= GPIO_MODER_MODE14_0;
-    GPIOA->MODER &= ~GPIO_MODER_MODE14_1;
+    gpio_write(GPIOA, 14, 0);
 }
 
 void main()
-{   
-    init_gpio();
-    
-    while (1) {
-        led_turn_on();
-        for (uint32_t i = 0; i < 4000000; i++);
+{
+    // Enable GPIO PORT A Clock
+    RCC->AHB2RSTR |= RCC_AHB2ENR_GPIOAEN;
 
-        led_turn_off();
-        for (uint32_t i = 0; i < 4000000; i++);        
+    gpio_configure_pin(GPIOA, 14,
+                       GPIO_MODE_OUTPUT,
+                       GPIO_OUTPUT_TYPE_PUSH_PULL,
+                       GPIO_OUTPUT_SPEED_LOW,
+                       GPIO_PULL_RESISTOR_NONE);
+
+    while (1) {
+        led_on();
+        for (uint32_t i = 0; i < 4000000; i++);
+        led_off();
+        for (uint32_t i = 0; i < 4000000; i++);
     }
 }
