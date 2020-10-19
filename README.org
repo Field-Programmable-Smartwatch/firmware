@@ -11,5 +11,5 @@ cd <example project>
 make
 #+END_SRC
 Please note that by default it will look for the cross compiler binary
-in the path determined by CROSS_PREFIX which is in the example
+in the path determined by CROSS_PATH which is in the example
 Makefile.
