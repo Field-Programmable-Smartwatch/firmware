@@ -6,7 +6,7 @@ OBJCOPY =${CROSS_PREFIX}objcopy
 
 CPU = cortex-m4
 DRIVER_PATH = ../drivers
-INCLUDE = -I./include -I${DRIVER_PATH}/gpio/
+INCLUDE = -I./include -I${DRIVER_PATH}/gpio/ -I${DRIVER_PATH}/lpuart/
 CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=${CPU} ${INCLUDE} -MMD
 LDFLAGS = -static -T linker.ld 
 

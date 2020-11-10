@@ -176,7 +176,7 @@ void __attribute__((naked)) Reset_Handler()
     // Set Interrupt Vector Table Offset                                                                                                                     
     SCB->VTOR = (uint32_t)interrupt_vector_table;
 
-    // Set MSI Clock as the System Clock                                                                                                                      
+    // Set MSI Clock as the System Clock
     RCC->CR |= RCC_CR_MSION;
 
     // Reset Clock Configuration                                                                                                                              
