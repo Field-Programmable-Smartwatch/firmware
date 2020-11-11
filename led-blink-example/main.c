@@ -15,13 +15,18 @@ void led_off()
 
 void configure()
 {
+    gpio_configuration_t gpiob_pin7_config;
+
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
 
-    gpio_configure_pin(GPIOB, 7,
-                       GPIO_MODE_OUTPUT,
-                       GPIO_OUTPUT_TYPE_PUSH_PULL,
-                       GPIO_OUTPUT_SPEED_LOW,
-                       GPIO_PULL_RESISTOR_NONE);
+    gpiob_pin7_config.port = GPIOB;
+    gpiob_pin7_config.pin = 7;
+    gpiob_pin7_config.mode = GPIO_MODE_OUTPUT;
+    gpiob_pin7_config.output_type = GPIO_OUTPUT_TYPE_PUSH_PULL;
+    gpiob_pin7_config.output_speed = GPIO_OUTPUT_SPEED_LOW;
+    gpiob_pin7_config.pull_resistor = GPIO_PULL_RESISTOR_NONE;
+
+    gpio_configure_pin(gpiob_pin7_config);
 }
 
 void main()

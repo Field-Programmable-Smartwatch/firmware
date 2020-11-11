@@ -29,15 +29,23 @@ typedef enum gpio_pull_resistor{
     GPIO_PULL_RESISTOR_RESERVED
 } gpio_pull_resistor_t;
 
+typedef struct gpio_configuration {
+    GPIO_TypeDef *port;
+    uint8_t pin;
+    gpio_mode_t mode;
+    gpio_output_type_t output_type;
+    gpio_output_speed_t output_speed;
+    gpio_pull_resistor_t pull_resistor;
+    uint8_t alternative_function;
+} gpio_configuration_t;
+
 void gpio_set_mode(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_mode_t mode);
 void gpio_set_output_type(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_output_type_t output_type);
 void gpio_set_output_speed(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_output_speed_t output_speed);
 void gpio_set_pull_resistor(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_pull_resistor_t pull_resistor);
-void gpio_configure_pin(GPIO_TypeDef *gpio_port, uint8_t pin,
-                        gpio_mode_t mode,
-                        gpio_output_type_t output_type,
-                        gpio_output_speed_t output_speed,
-                        gpio_pull_resistor_t pull_resistor);
+void gpio_set_alternative_function(GPIO_TypeDef *gpio_port, uint8_t pin, uint8_t alternative_function);
+
+void gpio_configure_pin(gpio_configuration_t config);
 
 uint8_t gpio_read(GPIO_TypeDef *gpio_port, uint8_t pin);
 
