@@ -19,13 +19,6 @@ void configure()
     lpuart_configuration_t lpuart_config;
 
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
-    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
-
-    gpio_configure_pin(GPIOB, 7,
-                       GPIO_MODE_OUTPUT,
-                       GPIO_OUTPUT_TYPE_PUSH_PULL,
-                       GPIO_OUTPUT_SPEED_LOW,
-                       GPIO_PULL_RESISTOR_NONE);
 
     gpio_configure_pin(GPIOA, 2,
                        GPIO_MODE_ALT_FUNC,
@@ -47,10 +40,7 @@ void main()
     configure();
     
     while (1) {
-        led_on();
         lpuart_send_bytes("Hello, world!\r\n", 15);
-        for (uint32_t i = 0; i < 400000; i++);
-        led_off();
-        for (uint32_t i = 0; i < 400000; i++);
+        for (uint32_t i = 0; i < 800000; i++);
     }
 }

@@ -6,15 +6,15 @@ OBJCOPY =${CROSS_PREFIX}objcopy
 
 CPU = cortex-m4
 DRIVER_PATH = ../drivers
-INCLUDE = -I./include -I${DRIVER_PATH}/gpio/ -I${DRIVER_PATH}/lpuart/
+INCLUDE = -I../include -I${DRIVER_PATH}/gpio/ -I${DRIVER_PATH}/lpuart/
 CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=${CPU} ${INCLUDE} -MMD
-LDFLAGS = -static -T linker.ld 
+LDFLAGS = -static -T ../linker.ld 
 
 SOURCES = $(wildcard *.c) $(wildcard ${DRIVER_PATH}/*/*.c)
 OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 DEPENDS = $(patsubst %.c,%.d,$(SOURCES))
 
-all: led-blink.bin
+all: lpuart.bin
 
 clean:
 	rm -f ${OBJECTS} ${DEPENDS} *.elf *.bin
@@ -23,8 +23,8 @@ clean:
 %.o: %.c Makefile
 	${GCC} ${CFLAGS} -o $@ $<
 
-led-blink.elf: ${OBJECTS}
+lpuart.elf: ${OBJECTS}
 	${LD} ${LDFLAGS} -o $@ $^
 
-led-blink.bin: led-blink.elf
+lpuart.bin: lpuart.elf
 	${OBJCOPY} $^ -O binary $@
