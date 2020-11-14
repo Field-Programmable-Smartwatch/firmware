@@ -5,14 +5,13 @@ LD = ${CROSS_PREFIX}ld
 OBJCOPY =${CROSS_PREFIX}objcopy
 
 CPU = cortex-m4
-INCLUDE = -Iinclude -Idebug -Ilibraries $(foreach inc_path, $(wildcard drivers/*), -I$(inc_path))
+INCLUDE = -Iinclude -Ilibraries $(foreach inc_path, $(wildcard drivers/*), -I$(inc_path))
 CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=${CPU} ${INCLUDE} -MMD -MF ${DEPDIR}/$*.d
 LDFLAGS = -static -T linker.ld 
 
 DEPDIR = .deps/
 COMMON_SOURCES = $(wildcard drivers/gpio/*.c) \
                  $(wildcard drivers/lpuart/*.c) \
-                 $(wildcard debug/*.c) \
                  $(wildcard libraries/*.c)
 
 led-blink_SOURCES = $(COMMON_SOURCES) $(wildcard led-blink-example/*.c)
