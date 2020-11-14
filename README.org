@@ -7,9 +7,12 @@ First, you will need an ARM cross compiler. Please follow the
 instructions [[https://github.com/Field-Programmable-Smartwatch/compiler][here]] to build your own cross compiler.
 
 #+BEGIN_SRC
-cd <example project>
 make
 #+END_SRC
+
+This command will build all the example binaries and output them as
+<example-name>.bin
+
 Please note that by default it will look for the cross compiler binary
 in the path determined by CROSS_PATH which is in the example
 Makefile.
