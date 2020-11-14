@@ -10,7 +10,7 @@ INCLUDE = -I../include -I${DRIVER_PATH}/gpio/ -I${DRIVER_PATH}/lpuart/
 CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=${CPU} ${INCLUDE} -MMD
 LDFLAGS = -static -T ../linker.ld 
 
-SOURCES = $(wildcard *.c) $(wildcard ${DRIVER_PATH}/*/*.c)
+SOURCES = $(wildcard *.c) $(wildcard ${DRIVER_PATH}/gpio/*.c)
 OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 DEPENDS = $(patsubst %.c,%.d,$(SOURCES))
 
