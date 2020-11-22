@@ -5,7 +5,7 @@ LD = ${CROSS_PREFIX}ld
 OBJCOPY =${CROSS_PREFIX}objcopy
 
 CPU = cortex-m4
-INCLUDE = -Iinclude -Ilibraries $(foreach inc_path, $(wildcard drivers/*), -I$(inc_path))
+INCLUDE = -Iinclude -Ilibraries $(foreach inc_path, $(wildcard drivers/*), -I$(inc_path)) -Ilibraries/terminal
 CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=${CPU} ${INCLUDE} -MMD -MF ${DEPDIR}/$*.d
 LDFLAGS = -static -T linker.ld 
 
@@ -22,14 +22,18 @@ lpuart_SOURCES = $(COMMON_SOURCES) $(wildcard lpuart-example/*.c)
 lpuart_OBJECTS = $(patsubst %.c,%.o,$(lpuart_SOURCES))
 lpuart_DEPENDS = $(patsubst %.c,${DEPDIR}/%.d,$(lpuart_SOURCES))
 
-spi_SOURCES = $(COMMON_SOURCES) $(wildcard spi-example/*.c) $(wildcard drivers/spi/*.c)
-spi_OBJECTS = $(patsubst %.c,%.o,$(spi_SOURCES))
+spi_SOURCES = $(COMMON_SOURCES) $(wildcard spi-example/*.c) $(wildcard drivers/spi/*.c) \
+              $(wildcard libraries/terminal/*.c) $(wildcard drivers/display/*.c)
+spi_OBJECTS = $(patsubst %.c,%.o,$(spi_SOURCES)) cp850-8x16.o
 spi_DEPENDS = $(patsubst %.c,${DEPDIR}/%.d,$(spi_SOURCES))
 
 all: led-blink.bin lpuart.bin spi.bin
 
 %.d:
 	@mkdir -p $(@D)
+
+%.o: %.psfu
+	${OBJCOPY} -O elf32-littlearm -B arm -I binary $^ $@
 
 %.o: %.c Makefile
 	${GCC} ${CFLAGS} -o $@ $<

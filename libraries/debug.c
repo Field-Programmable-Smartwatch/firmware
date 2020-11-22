@@ -5,60 +5,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-
-uint32_t uint_to_str(char *dest, uint32_t u, const uint32_t size)
-{
-    if (size == 0) {
-        return 0;
-    }
-    
-    char str[11];
-    str[10] = 0;
-    uint32_t str_index = 10;
-    uint32_t bytes_copied = 0;
-    
-    do {
-        uint8_t digit = u % 10;
-        str[--str_index] = digit | 48; // convert raw digit to ascii representation
-        u -= digit;
-        u /= 10;
-    } while (u);
-
-    while (bytes_copied < size && str[str_index]) {
-        dest[bytes_copied++] = str[str_index++];
-    }
-    
-    return bytes_copied;
-}
-
-uint32_t int_to_str(char *dest, const int32_t i, const uint32_t size)
-{
-    if (i > 0) {
-        return uint_to_str(dest, i, size);
-    }
-
-    uint32_t u = ~(i) + 1;
-    
-    char str[11];
-    str[10] = 0;
-    uint32_t str_index = 10;
-    uint32_t bytes_copied = 0;
-    
-    do {
-        uint8_t digit = u % 10;
-        str[str_index--] = digit | 48; // convert raw digit to ascii representation
-        u -= digit;
-        u /= 10;
-    } while (u);
-
-    str[str_index] = '-';
-    while (bytes_copied < size && str[str_index]) {
-        dest[bytes_copied++] = str[str_index++];
-    }
-
-    return bytes_copied;
-}
-
 void debug_init()
 {
     gpio_configuration_t tx_pin_config;
