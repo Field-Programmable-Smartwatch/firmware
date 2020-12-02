@@ -2,7 +2,7 @@
 This repository contains source code for example programs and drivers
 for the STM32wb55 microcontroller.
 
-* Directory Structure
+** Directory Structure
 - boot: Contains code related to the initial startup of the microcontroller
 - drivers: Contains code to drive specific peripherals, devices, and interfaces
 - include: Contains header files that define structures and and
@@ -10,7 +10,7 @@ for the STM32wb55 microcontroller.
 - libraries: Contains miscellaneous bits of code to ease development
 - *-example: Contains the main loop for the specific example
 
-* How To Build
+** How To Build
 First, you will need an ARM cross compiler. Please follow the
 instructions [[https://github.com/Field-Programmable-Smartwatch/compiler][here]] to build your own cross compiler.
 
@@ -25,7 +25,7 @@ Please note that by default it will look for the cross compiler binary
 in the path determined by CROSS_PATH which is in the example
 Makefile.
 
-* LED Blink example
+** LED Blink example
 This is example firmware to blink an LED by writing to a GPIO pin
 
 Building and flashing the example:
@@ -37,7 +37,7 @@ make flash-led-blink
 Wiring Diagram:
 [[./led-blink-wiring-diagram.png]]
 
-* LPUART example
+** LPUART example
 This is example firmware to write ascii data to a serial console
 
 Building and flashing the example:
@@ -54,7 +54,7 @@ Connecting to the serial console:
 # screen /dev/<device> 115200
 #+END_SRC
 
-* SPI example
+** SPI example
 This is example firmware to interface with the Sharp Memory Display
 via spi
 
