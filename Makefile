@@ -12,7 +12,8 @@ LDFLAGS = -static -T linker.ld
 DEPDIR = .deps/
 COMMON_SOURCES = $(wildcard drivers/gpio/*.c) \
                  $(wildcard drivers/lpuart/*.c) \
-                 $(wildcard libraries/*.c)
+                 $(wildcard libraries/*.c) \
+                 $(wildcard boot/*.c)
 
 led-blink_SOURCES = $(COMMON_SOURCES) $(wildcard led-blink-example/*.c)
 led-blink_OBJECTS = $(patsubst %.c,%.o,$(led-blink_SOURCES))
