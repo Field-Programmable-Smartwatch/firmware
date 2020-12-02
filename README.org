@@ -35,7 +35,7 @@ make flash-led-blink
 #+END_SRC
 
 Wiring Diagram:
-[[./documentation/led-blink-wiring-diagram.png]]
+[[./led-blink-wiring-diagram.png]]
 
 * LPUART example
 This is example firmware to write ascii data to a serial console
@@ -47,7 +47,12 @@ make flash-lpuart
 #+END_SRC
 
 Wiring Diagram:
-[[./documentation/lpuart-wiring-diagram.png]]
+[[./lpuart-wiring-diagram.png]]
+
+Connecting to the serial console:
+#+BEGIN_SRC
+# screen /dev/<device> 115200
+#+END_SRC
 
 * SPI example
 This is example firmware to interface with the Sharp Memory Display
@@ -60,4 +65,4 @@ make flash-spi
 #+END_SRC
 
 Wiring Diagram:
-[[./documentation/spi-wiring-diagram.png]]
+[[./spi-wiring-diagram.png]]
