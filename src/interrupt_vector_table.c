@@ -4,21 +4,14 @@
 
 #define VECT_TAB_OFFSET 0x0
 
+extern uint32_t _estack[];
+
 void __attribute__((naked,noreturn)) Default_Handler()
 {
     while(1);
 }
 
-extern uint32_t _estack[];
-extern uint32_t _sidata[];
-extern uint32_t _sdata[];
-extern uint32_t _edata[];
-extern uint32_t _sbss[];
-extern uint32_t _ebss[];
-
-extern void main(void);
-
-void Reset_Handler() __attribute__((naked));
+void Reset_Handler() __attribute__((weak));
 void NMI_Handler() __attribute__((weak, noreturn, alias("Default_Handler")));
 void HardFault_Handler() __attribute__((weak, noreturn, alias("Default_Handler")));
 void MemManage_Handler() __attribute__((weak, noreturn, alias("Default_Handler")));
@@ -175,35 +168,3 @@ void (* const interrupt_vector_table[])() __attribute__((section(".isr_vector"))
     DMA2_Channel7_IRQHandler,
     DMAMUX1_OVR_IRQHandler,
 };
-
-void __attribute__((naked)) Reset_Handler()
-{
-    __asm__("ldr r0, =_estack\n\t"
-            "mov sp, r0");
-
-    // Copy data section from flash memory to ram
-    uint32_t data_section_size = _edata - _sdata;
-    memcpy(_sdata, _sidata, data_section_size*4);
-
-    // Zero out bss
-    uint32_t bss_section_size = _ebss - _sbss;
-    memset(_sbss, 0, bss_section_size*4);
-    
-    // Set Interrupt Vector Table Offset
-    SCB->VTOR = (uint32_t)interrupt_vector_table;
-
-    // Set MSI Clock as the System Clock
-    RCC->CR |= RCC_CR_MSION;
-
-    // Reset Clock Configuration
-    RCC->CFGR = 0x00070000;
-    RCC->CR &= 0xFAF6FEFB;
-    RCC->CSR &= 0xFFFFFFFA;
-    RCC->CRRCR &= 0xFFFFFFFE;
-    RCC->PLLCFGR = 0x22041000;
-    RCC->PLLSAI1CFGR = 0x22041000;
-
-    // Disable Interrupts
-    RCC->CIER = 0x00000000;
-    main();
-}

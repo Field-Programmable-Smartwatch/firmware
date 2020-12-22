@@ -1,14 +1,12 @@
 * Firmware
-This repository contains source code for example programs and drivers
-for the STM32wb55 microcontroller.
+This repository contains source code for the firmware and drivers
+for the STM32WB55 microcontroller.
 
 ** Directory Structure
-- boot: Contains code related to the initial startup of the microcontroller
 - drivers: Contains code to drive specific peripherals, devices, and interfaces
 - include: Contains header files that define structures and and
   various locations in memory to configure the chip
-- libraries: Contains miscellaneous bits of code to ease development
-- *-example: Contains the main loop for the specific example
+- src: Contains the firmware source for the smartwatch
 
 ** How To Build
 First, you will need an ARM cross compiler. Please follow the
@@ -18,51 +16,18 @@ instructions [[https://github.com/Field-Programmable-Smartwatch/compiler][here]]
 make
 #+END_SRC
 
-This command will build all the example binaries and output them as
-<example-name>.bin
+This command will build all the fpsw binary and output it as
+fpsw.bin
 
 Please note that by default it will look for the cross compiler binary
 in the path determined by CROSS_PATH which is in the example
 Makefile.
 
-** LED Blink example
-This is example firmware to blink an LED by writing to a GPIO pin
+** How to Flash the firmware to the smartwatch
+Flip the boot mode enable switch to the on position and reset the
+device. Then connect the device to the computer via USB and run the
+following command:
 
-Building and flashing the example:
 #+BEGIN_SRC
-make led-blink-example
-make flash-led-blink
+make flash-fpsw
 #+END_SRC
-
-Wiring Diagram:
-[[./led-blink-wiring-diagram.png]]
-
-** LPUART example
-This is example firmware to write ascii data to a serial console
-
-Building and flashing the example:
-#+BEGIN_SRC
-make lpuart-example
-make flash-lpuart
-#+END_SRC
-
-Wiring Diagram:
-[[./lpuart-wiring-diagram.png]]
-
-Connecting to the serial console:
-#+BEGIN_SRC
-# screen /dev/<device> 115200
-#+END_SRC
-
-** SPI example
-This is example firmware to interface with the Sharp Memory Display
-via spi
-
-Building and flashing the example:
-#+BEGIN_SRC
-make spi-example
-make flash-spi
-#+END_SRC
-
-Wiring Diagram:
-[[./spi-wiring-diagram.png]]
