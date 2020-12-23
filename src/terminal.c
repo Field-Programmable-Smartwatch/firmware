@@ -105,3 +105,15 @@ void terminal_print(char *format, ...)
 
     terminal_print_string(msg);
 }
+
+void terminal_set_cursor(uint32_t x, uint32_t y)
+{
+    if (x > terminal.width) {
+        x = terminal.width;
+    }
+    if (y > terminal.height) {
+        y = terminal.height;
+    }
+    terminal.cursor.x = x;
+    terminal.cursor.y = y;
+}
