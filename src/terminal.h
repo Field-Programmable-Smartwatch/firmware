@@ -28,7 +28,8 @@ typedef struct terminal_configuration {
 } terminal_configuration_t;
 
 void terminal_init(terminal_configuration_t config);
-void terminal_print(char *format, ...);
 void terminal_set_cursor(uint32_t x, uint32_t y);
+void terminal_print(char *format, ...);
+void terminal_print_at(uint32_t x, uint32_t y, char *format, ...);
 
 #endif

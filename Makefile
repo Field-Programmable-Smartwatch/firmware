@@ -42,6 +42,6 @@ flash-%:
 
 .PHONY: clean
 clean:
-	rm -rf $(DEPDIR) $(led-blink_OBJECTS) $(lpuart_OBJECTS) $(spi_OBJECTS) *.elf *.bin
+	rm -rf $(DEPDIR) $(OBJECTS) *.elf *.bin
 
 include $(DEPENDS)

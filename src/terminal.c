@@ -18,6 +18,18 @@ void terminal_init(terminal_configuration_t config)
     terminal.font_bitmap = (uint8_t *)terminal.font_header + terminal.font_header->offset;
 }
 
+void terminal_set_cursor(uint32_t x, uint32_t y)
+{
+    if (x > terminal.width) {
+        x = terminal.width;
+    }
+    if (y > terminal.height) {
+        y = terminal.height;
+    }
+    terminal.cursor.x = x;
+    terminal.cursor.y = y;
+}
+
 void terminal_print_char(char c)
 {
     if (terminal.cursor.x > terminal.width) {
@@ -50,70 +62,80 @@ void terminal_print_string(char *str)
     }
 }
 
-void terminal_print(char *format, ...)
+void _format_string(char *format, va_list ap, char *str, uint32_t *str_len)
 {
-    va_list ap;
     uint32_t u;
     int32_t i;
     char *s;
     int c;
-    char msg[MSG_MAX_LENGTH];
-    uint32_t msg_size = 0;
     uint32_t format_size = strlen(format);
-    
-    va_start(ap, format);
+
+    *str_len = 0;
     for (uint32_t format_index = 0; format_index < format_size; format_index++) {
         char ch = format[format_index];
         if (ch == '%') {
             
             if (format[format_index+1] == 'u') {
                 u = va_arg(ap, uint32_t);
-                msg_size += uint_to_str(&msg[msg_size], u, MSG_MAX_LENGTH - msg_size);
+                *str_len += uint_to_str(&str[*str_len], u, MSG_MAX_LENGTH - *str_len);
             }
             
             if (format[format_index+1] == 'i' ||
                 format[format_index+1] == 'd') {
                 i = va_arg(ap, int32_t);
-                msg_size += int_to_str(&msg[msg_size], i, MSG_MAX_LENGTH - msg_size);
+                *str_len += int_to_str(&str[*str_len], i, MSG_MAX_LENGTH - *str_len);
             }
             
             if (format[format_index+1] == 's') {
                 s = va_arg(ap, char *);
                 uint32_t copy_size = strlen(s);
-                if (copy_size > MSG_MAX_LENGTH - msg_size) {
-                    copy_size = MSG_MAX_LENGTH - msg_size;
+                if (copy_size > MSG_MAX_LENGTH - *str_len) {
+                    copy_size = MSG_MAX_LENGTH - *str_len;
                 }
-                strncpy(&msg[msg_size], s, copy_size);
-                msg_size += copy_size;
+                strncpy(&str[*str_len], s, copy_size);
+                *str_len += copy_size;
             }
             
             if (format[format_index+1] == 'c') {
                 c = va_arg(ap, int);
-                if (MSG_MAX_LENGTH - msg_size > 0) {
-                    msg[msg_size++] = (char)c;
+                if (MSG_MAX_LENGTH - *str_len > 0) {
+                    str[(*str_len)++] = (char)c;
                 }
             }
             
             format_index++;
             
         } else {
-            msg[msg_size++] = ch;
+            str[(*str_len)++] = ch;
         }
     }
+}
+
+void terminal_print(char *format, ...)
+{
+    va_list ap;
+    char msg[MSG_MAX_LENGTH];
+    uint32_t msg_size = 0;
+
+    va_start(ap, format);
+    _format_string(format, ap, msg, &msg_size);
     va_end(ap);
     msg[msg_size] = 0;
 
     terminal_print_string(msg);
 }
 
-void terminal_set_cursor(uint32_t x, uint32_t y)
+void terminal_print_at(uint32_t x, uint32_t y, char *format, ...)
 {
-    if (x > terminal.width) {
-        x = terminal.width;
-    }
-    if (y > terminal.height) {
-        y = terminal.height;
-    }
-    terminal.cursor.x = x;
-    terminal.cursor.y = y;
+    va_list ap;
+    char msg[MSG_MAX_LENGTH];
+    uint32_t msg_size = 0;
+
+    va_start(ap, format);
+    _format_string(format, ap, msg, &msg_size);
+    va_end(ap);
+    msg[msg_size] = 0;
+
+    terminal_set_cursor(x, y);
+    terminal_print_string(msg);
 }

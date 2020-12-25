@@ -35,12 +35,9 @@ void main()
 {
     configure();
     display_clear();
-    terminal_set_cursor(6, 3);
-    terminal_print("Monday");
-    terminal_set_cursor(5, 4);
-    terminal_print("January 1");
-    terminal_set_cursor(6, 5);
-    terminal_print("12:00AM");
+    terminal_print_at(6, 3, "Monday");
+    terminal_print_at(5, 4, "January 1");
+    terminal_print_at(6, 5, "12:00AM");
     while (1) {
         display_render();
         for (uint32_t i = 0; i < 800000; i++);        
