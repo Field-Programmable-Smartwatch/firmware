@@ -19,7 +19,7 @@ extern uint32_t _sbss[];
 extern uint32_t _ebss[];
 extern uint32_t interrupt_vector_table[];
 
-uint8_t bootloader_mode = 0;
+uint8_t button_state = 0;
 
 void jump_to_bootloader()
 {
@@ -130,11 +130,20 @@ void main()
     terminal_print_at(5, 4, "January 2");
     terminal_print_at(6, 5, "12:00AM");
     terminal_set_cursor(0, 0);
+    display_render();
+
     while (1) {
-        uint8_t button = gpio_read(GPIOB, 6);
-        debug_print(" button %u\r\n", button);
+        asm("wfi");
+        if (button_state == 1) {
+            terminal_print_at(0, 0, "UP    ");
+        }
+        if (button_state == 2) {
+            terminal_print_at(0, 0, "SELECT");
+        }
+        if (button_state == 3) {
+            terminal_print_at(0, 0, "DOWN  ");
+        }
         display_render();
-        for (uint32_t i = 0; i < 800000; i++);
     }
 }
 
@@ -171,15 +180,36 @@ void __attribute__((naked)) Reset_Handler()
     main();
 }
 
+void delay()
+{
+    for (uint32_t i = 0; i < 40000; i++);
+}
+
 void EXTI9_5_IRQHandler()
 {
     if (EXTI->PR1 & (1 << 6)) {
+        uint8_t i1 = gpio_read(GPIOB, 6);
+        delay();
+        uint8_t i2 = gpio_read(GPIOB, 6);
+        if (i1 == 0 && i2 == 0) {
+            EXTI->PR1 = 1 << 6;
+            return;
+        }
         debug_print("Up Button Pressed\r\n");
+        button_state = 1;
         EXTI->PR1 = 1 << 6;
     }
 
     if (EXTI->PR1 & (1 << 5)) {
+        uint8_t i1 = gpio_read(GPIOB, 5);
+        delay();
+        uint8_t i2 = gpio_read(GPIOB, 5);
+        if (i1 == 0 && i2 == 0) {
+            EXTI->PR1 = 1 << 5;
+            return;
+        }
         debug_print("Select Button Pressed\r\n");
+        button_state = 2;
         EXTI->PR1 = 1 << 5;
     }
 }
@@ -187,7 +217,15 @@ void EXTI9_5_IRQHandler()
 void EXTI4_IRQHandler()
 {
     if (EXTI->PR1 & (1 << 4)) {
+        uint8_t i1 = gpio_read(GPIOB, 4);
+        delay();
+        uint8_t i2 = gpio_read(GPIOB, 4);
+        if (i1 == 0 && i2 == 0) {
+            EXTI->PR1 = 1 << 4;
+            return;
+        }
         debug_print("Down Button Pressed\r\n");
+        button_state = 3;
         EXTI->PR1 = 1 << 4;
     }
 }
@@ -195,8 +233,18 @@ void EXTI4_IRQHandler()
 void EXTI3_IRQHandler()
 {
     if (EXTI->PR1 & (1 << 3)) {
+        uint8_t i1 = gpio_read(GPIOB, 3);
+        delay();
+        uint8_t i2 = gpio_read(GPIOB, 3);
+        if (i1 == 0 && i2 == 0) {
+            EXTI->PR1 = 1 << 3;
+            return;
+        }
         debug_print("Load Bootloader\r\n");
         *((unsigned long *)0x20003FF0) = 0xDEADBEEF;
+        display_clear();
+        terminal_print_at(0, 4, "LOADING BOOTLOADER");
+        display_render();
         EXTI->PR1 = 1 << 3;
         NVIC_SystemReset();
     }
