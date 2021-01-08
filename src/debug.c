@@ -23,7 +23,7 @@ void debug_init()
 
     lpuart_config.clock_source = LPUART_CLOCK_SOURCE_SYSCLK;
     lpuart_config.word_length = LPUART_WORD_LENGTH_8;
-    lpuart_config.baud_rate_prescaler = 0x22b8;
+    lpuart_config.baud_rate_prescaler = 0x8ae3;
     lpuart_config.stop_bits = LPUART_STOP_BITS_1;
     lpuart_init(lpuart_config);
 }
@@ -31,55 +31,13 @@ void debug_init()
 void debug_print(char *format, ...)
 {
     va_list ap;
-    uint32_t u;
-    int32_t i;
-    char *s;
-    int c;
-    char debug_msg[DEBUG_MSG_MAX_LENGTH];
-    uint32_t debug_msg_size = 0;
-    uint32_t format_size = strlen(format);
+    char msg[DEBUG_MSG_MAX_LENGTH];
+    uint32_t msg_length = 0;
     
     va_start(ap, format);
-    for (uint32_t format_index = 0; format_index < format_size; format_index++) {
-        char ch = format[format_index];
-        if (ch == '%') {
-            
-            if (format[format_index+1] == 'u') {
-                u = va_arg(ap, uint32_t);
-                debug_msg_size += uint_to_str(&debug_msg[debug_msg_size], u, DEBUG_MSG_MAX_LENGTH - debug_msg_size);
-            }
-            
-            if (format[format_index+1] == 'i' ||
-                format[format_index+1] == 'd') {
-                i = va_arg(ap, int32_t);
-                debug_msg_size += int_to_str(&debug_msg[debug_msg_size], i, DEBUG_MSG_MAX_LENGTH - debug_msg_size);
-            }
-            
-            if (format[format_index+1] == 's') {
-                s = va_arg(ap, char *);
-                uint32_t copy_size = strlen(s);
-                if (copy_size > DEBUG_MSG_MAX_LENGTH - debug_msg_size) {
-                    copy_size = DEBUG_MSG_MAX_LENGTH - debug_msg_size;
-                }
-                strncpy(&debug_msg[debug_msg_size], s, copy_size);
-                debug_msg_size += copy_size;
-            }
-            
-            if (format[format_index+1] == 'c') {
-                c = va_arg(ap, int);
-                if (DEBUG_MSG_MAX_LENGTH - debug_msg_size > 0) {
-                    debug_msg[debug_msg_size++] = (char)c;
-                }
-            }
-            
-            format_index++;
-            
-        } else {
-            debug_msg[debug_msg_size++] = ch;
-        }
-    }
+    string_format(format, ap, msg, DEBUG_MSG_MAX_LENGTH);
     va_end(ap);
-    debug_msg[debug_msg_size] = 0;
 
-    lpuart_send_bytes(debug_msg, debug_msg_size);
+    msg_length = strlen(msg);
+    lpuart_send_bytes(msg, msg_length);
 }

@@ -2,6 +2,7 @@
 #include <stdarg.h> 
 #include <display.h>
 #include <string.h>
+#include <debug.h>
 
 #define MSG_MAX_LENGTH 256
 
@@ -115,12 +116,10 @@ void terminal_print(char *format, ...)
 {
     va_list ap;
     char msg[MSG_MAX_LENGTH];
-    uint32_t msg_size = 0;
 
     va_start(ap, format);
-    _format_string(format, ap, msg, &msg_size);
+    string_format(format, ap, msg, MSG_MAX_LENGTH);
     va_end(ap);
-    msg[msg_size] = 0;
 
     terminal_print_string(msg);
 }
@@ -129,12 +128,9 @@ void terminal_print_at(uint32_t x, uint32_t y, char *format, ...)
 {
     va_list ap;
     char msg[MSG_MAX_LENGTH];
-    uint32_t msg_size = 0;
-
     va_start(ap, format);
-    _format_string(format, ap, msg, &msg_size);
+    string_format(format, ap, msg, MSG_MAX_LENGTH);
     va_end(ap);
-    msg[msg_size] = 0;
 
     terminal_set_cursor(x, y);
     terminal_print_string(msg);

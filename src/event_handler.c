@@ -7,7 +7,7 @@
 #include <debug.h>
 
 #define EVENT_SOURCE_LENGTH 4
-#define DEBOUNCE_THRESHOLD 10 // In millisec
+#define DEBOUNCE_THRESHOLD 5 // In millisec
 
 event_source_t source[EVENT_SOURCE_LENGTH];
 

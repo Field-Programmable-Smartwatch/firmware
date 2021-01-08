@@ -2,7 +2,7 @@
 #include <systick_timer.h>
 #include <debug.h>
 
-#define SYS_CLOCK 4000000L
+#define SYS_CLOCK 16000000L
 
 uint32_t tick_count = 0;
 

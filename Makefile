@@ -5,14 +5,15 @@ LD = $(CROSS_PREFIX)ld
 OBJCOPY =$(CROSS_PREFIX)objcopy
 
 CPU = cortex-m4
-INCLUDE = -Iinclude $(foreach inc_path, $(wildcard drivers/*), -I$(inc_path)) -Isrc
+INCLUDE = -Iinclude -Isrc $(foreach inc_path, $(wildcard drivers/*), -I$(inc_path)) $(foreach inc_path, $(wildcard applications/*), -I$(inc_path))
 CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=$(CPU) $(INCLUDE) -MMD -MF $(DEPDIR)/$*.d
 LDFLAGS = -static -T linker.ld 
 
 DEPDIR = .deps/
 
 SOURCE = $(wildcard drivers/*/*.c) \
-         $(wildcard src/*.c)
+         $(wildcard src/*.c) \
+         $(wildcard applications/*/*.c)
 
 OBJECTS = $(patsubst %.c,%.o,$(SOURCE)) cp850-8x16.o
 

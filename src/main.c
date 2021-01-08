@@ -9,6 +9,7 @@
 #include <display.h>
 #include <systick_timer.h>
 #include <event_handler.h>
+#include <time.h>
 
 extern uint32_t _sidata[];
 extern uint32_t _sdata[];
@@ -16,32 +17,15 @@ extern uint32_t _edata[];
 extern uint32_t _sbss[];
 extern uint32_t _ebss[];
 extern uint32_t interrupt_vector_table[];
-
-uint8_t button_state = 0;
+bool msion = false;
+bool msirdy = false;
+uint32_t hz;
 
 void jump_to_bootloader()
 {
     void (*system_memory_jump)(void);
 
     volatile uint32_t addr = 0x1FFF0000;
-
-    // Set MSI Clock as the System Clock
-    RCC->CR |= RCC_CR_MSION;
-
-    // Reset Clock Configuration
-    RCC->CFGR = 0x00070000;
-    RCC->CR &= 0xFAF6FEFB;
-    RCC->CSR &= 0xFFFFFFFA;
-    RCC->CRRCR &= 0xFFFFFFFE;
-    RCC->PLLCFGR = 0x22041000;
-    RCC->PLLSAI1CFGR = 0x22041000;
-
-    // Disable Interrupts
-    RCC->CIER = 0x00000000;
-
-    SysTick->CTRL = 0;
-    SysTick->LOAD = 0;
-    SysTick->VAL = 0;
 
     SYSCFG->MEMRMP = 0x01;
     system_memory_jump = (void (*)(void)) (*((uint32_t *)(addr + 4)));
@@ -50,10 +34,14 @@ void jump_to_bootloader()
     system_memory_jump();
 }
 
-void configure()
+void main()
 {
-    terminal_configuration_t terminal;
+    if (*((unsigned long *)0x20003FF0) == 0x10ADB007) {
+        *((unsigned long *)0x20003FF0) = 0x00000000;
+        jump_to_bootloader();
+    }
 
+    terminal_configuration_t terminal;
 
     __enable_irq();
     NVIC_EnableIRQ(SysTick_IRQn);
@@ -68,61 +56,8 @@ void configure()
     terminal.width = 18;
     terminal.height = 10;
     terminal_init(terminal);
-}
 
-void main()
-{
-    if (*((unsigned long *)0x20003FF0) == 0xDEADBEEF) {
-        *((unsigned long *)0x20003FF0) = 0xDEADB000;
-        jump_to_bootloader();
-    }
-
-    configure();
-    display_clear();
-    terminal_print_at(6, 3, "Monday");
-    terminal_print_at(5, 4, "January 2");
-    terminal_print_at(6, 5, "12:00AM");
-    terminal_set_cursor(0, 0);
-    display_render();
-
-    event_queue_t event_queue;
-
-    while (1) {
-        asm("wfi");
-        event_queue = event_handler_poll();
-        if (!event_queue.length) {
-            continue;
-        }
-        for (uint8_t i = 0; i < event_queue.length; i++) {
-            event_t event = event_queue.events[i];
-            if (event.type == EVENT_TYPE_POS_EDGE) {
-                if (event.id == ID_BUTTON_UP) {
-                    debug_print("UP!\r\n");
-                    terminal_print_at(0, 0, "UP    ");
-                }
-
-                if (event.id == ID_BUTTON_SELECT) {
-                    debug_print("SELECT!\r\n");
-                    terminal_print_at(0, 0, "SELECT");
-                }
-
-                if (event.id == ID_BUTTON_DOWN) {
-                    debug_print("DOWN!\r\n");
-                    terminal_print_at(0, 0, "DOWN  ");
-                }
-
-                if (event.id == ID_BUTTON_LOAD_BOOTLOADER) {
-                    debug_print("LOADING BOOTLOADER!\r\n");
-                    display_clear();
-                    terminal_print_at(0, 4, "LOADING BOOTLOADER");
-                    display_render();
-                    *((unsigned long *)0x20003FF0) = 0xDEADBEEF;
-                    NVIC_SystemReset();
-                }
-            }
-        }
-        display_render();
-    }
+    time_application_start();
 }
 
 void __attribute__((naked)) Reset_Handler()
@@ -141,9 +76,6 @@ void __attribute__((naked)) Reset_Handler()
     // Set Interrupt Vector Table Offset
     SCB->VTOR = (uint32_t)interrupt_vector_table;
 
-    // Set MSI Clock as the System Clock
-    RCC->CR |= RCC_CR_MSION;
-
     // Reset Clock Configuration
     RCC->CFGR = 0x00070000;
     RCC->CR &= 0xFAF6FEFB;
@@ -151,6 +83,14 @@ void __attribute__((naked)) Reset_Handler()
     RCC->CRRCR &= 0xFFFFFFFE;
     RCC->PLLCFGR = 0x22041000;
     RCC->PLLSAI1CFGR = 0x22041000;
+    
+    // Set MSI clock speed to 16Mhz
+    RCC->CR &= ~RCC_CR_MSION;
+    RCC->CR &= ~(0xF << 4);
+    RCC->CR |= 8 << 4;
+    
+    // Set MSI Clock as the System Clock
+    RCC->CR |= RCC_CR_MSION;
 
     // Disable Interrupts
     RCC->CIER = 0x00000000;

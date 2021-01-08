@@ -16,14 +16,6 @@ void spi_configure(SPI_TypeDef *spi, spi_configuration_t config)
 
     RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
-
-    /* nss_pin.port = GPIOA; */
-    /* nss_pin.pin = 4; */
-    /* nss_pin.mode = GPIO_MODE_OUTPUT; */
-    /* nss_pin.output_type = GPIO_OUTPUT_TYPE_PUSH_PULL; */
-    /* nss_pin.output_speed = GPIO_OUTPUT_SPEED_HIGH; */
-    /* nss_pin.pull_resistor = GPIO_PULL_RESISTOR_NONE; */
-    /* gpio_configure_pin(nss_pin); */
     
     sck_pin.port = GPIOA;
     sck_pin.pin = 5;
@@ -75,9 +67,6 @@ void spi_configure(SPI_TypeDef *spi, spi_configuration_t config)
 
     cr2_value |= config.data_size << SPI_CR2_DS_Pos;
     cr2_value |= SPI_CR2_FRXTH;
-
-    debug_print("cr1 = %d\r\n", cr1_value);
-    debug_print("cr2 = %d\r\n", cr2_value);
 
     spi->CR1 = cr1_value;
     spi->CR2 = cr2_value;
