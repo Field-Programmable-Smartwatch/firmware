@@ -5,6 +5,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+int32_t g_lpuart_handle = -1;
+
 void debug_init()
 {
     gpio_configuration_t tx_pin_config;
@@ -25,7 +27,7 @@ void debug_init()
     lpuart_config.word_length = LPUART_WORD_LENGTH_8;
     lpuart_config.baud_rate_prescaler = 0x8ae3;
     lpuart_config.stop_bits = LPUART_STOP_BITS_1;
-    lpuart_init(lpuart_config);
+    g_lpuart_handle = lpuart_open(lpuart_config);
 }
 
 void debug_print(char *format, ...)
@@ -39,5 +41,5 @@ void debug_print(char *format, ...)
     va_end(ap);
 
     msg_length = strlen(msg);
-    lpuart_send_bytes(msg, msg_length);
+    lpuart_write(g_lpuart_handle, msg, msg_length);
 }

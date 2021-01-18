@@ -4,6 +4,7 @@
 #include <string.h>
 #include <terminal.h>
 #include <gpio.h>
+#include <lpuart.h>
 #include <debug.h>
 #include <spi.h>
 #include <display.h>
@@ -47,6 +48,8 @@ void main()
     NVIC_EnableIRQ(SysTick_IRQn);
     RCC->CIER |= 1 << 2;
 
+    lpuart_init();
+    
     debug_init();
     display_init();
     systick_timer_init();
