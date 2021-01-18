@@ -14,6 +14,8 @@ uint8_t vcom = 0;
 uint32_t display_buffer_size = (DISPLAY_WIDTH * DISPLAY_HEIGHT) / 8;
 uint8_t display_buffer[(DISPLAY_WIDTH * DISPLAY_HEIGHT) / 8];
 
+int32_t g_spi_handle = -1;
+
 static uint8_t reverse_byte(uint8_t value)
 {
     uint32_t v = value;
@@ -48,7 +50,7 @@ void display_init()
     spi1.significant_bit = SPI_SIGNIFICANT_BIT_MSB;
     spi1.com_mode =  SPI_COM_MODE_SIMPLEX;
     spi1.data_size = SPI_DATA_SIZE_8BIT;
-    spi_configure(SPI1, spi1);
+    g_spi_handle = spi_open(spi1);
 
     // Zero out display buffer
     memset(display_buffer, 0, display_buffer_size);
@@ -63,7 +65,7 @@ void display_render()
     vcom = (vcom) ? 0 : 1;
 
     uint8_t update_data_msg = (vcom<<6) | 0x80;
-    spi_transmit(SPI1, update_data_msg);
+    spi_write(g_spi_handle, &update_data_msg, 1);
 
     for (uint32_t line = 0; line < DISPLAY_HEIGHT; line++) {
         uint8_t msg[(DISPLAY_WIDTH/8)+2];
@@ -78,7 +80,7 @@ void display_render()
         msg[(DISPLAY_WIDTH/8)+1] = 0;
 
         // Send it
-        spi_transmit_buffer(SPI1, msg, (DISPLAY_WIDTH/8)+2);
+        spi_write(g_spi_handle, msg, (DISPLAY_WIDTH/8)+2);
     }
     
     // set Chip select to low

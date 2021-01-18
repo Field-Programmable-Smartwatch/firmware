@@ -49,6 +49,7 @@ void main()
     RCC->CIER |= 1 << 2;
 
     lpuart_init();
+    spi_init();
     
     debug_init();
     display_init();

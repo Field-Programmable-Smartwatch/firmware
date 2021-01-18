@@ -17,7 +17,8 @@ static void lpuart_send_byte(uint8_t data)
 
 static void lpuart_configure(int32_t lpuart_handle)
 {
-    if (lpuart_handle >= LPUART_DEVICE_MAX ||
+    if (lpuart_handle < 0 ||
+        lpuart_handle >= LPUART_DEVICE_MAX ||
         !g_lpuart_devices[lpuart_handle].is_open) {
         return;
     }
@@ -97,7 +98,7 @@ int32_t lpuart_open(lpuart_configuration_t config)
 void lpuart_close(int32_t lpuart_handle)
 {
     if (lpuart_handle < 0 ||
-        lpuart_handle > LPUART_DEVICE_MAX) {
+        lpuart_handle >= LPUART_DEVICE_MAX) {
         return;
     }
 

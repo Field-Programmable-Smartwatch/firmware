@@ -2,6 +2,7 @@
 #define SPI_H
 
 #include <stm32wb55xx.h>
+#include <stdbool.h>
 
 typedef enum spi_clock_mode {
     SPI_CLOCK_MODE_0,
@@ -55,6 +56,7 @@ typedef enum spi_data_size {
 } spi_data_size_t;
 
 typedef struct spi_configuration {
+    bool is_open;
     spi_clock_mode_t clock_mode;
     spi_mode_t mode;
     spi_baud_rate_prescaler_t baud_rate_prescaler;
@@ -63,7 +65,10 @@ typedef struct spi_configuration {
     spi_data_size_t data_size;
 } spi_configuration_t;
 
-void spi_configure(SPI_TypeDef *spi, spi_configuration_t config);
-void spi_transmit(SPI_TypeDef *spi, uint8_t msg);
-void spi_transmit_buffer(SPI_TypeDef *spi, uint8_t *msg, uint16_t size);
+void spi_read(int32_t spi_handle, void *buffer, uint32_t length);
+void spi_write(int32_t spi_handle, void *data, uint32_t length);
+int32_t spi_open(spi_configuration_t config);
+void spi_close(int32_t spi_handle);
+void spi_init();
+void spi_destroy();
 #endif
