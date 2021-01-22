@@ -32,8 +32,7 @@ void display_init()
     spi_configuration_t spi1;
 
     // Enable clock for GPIO port B
-    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
-    // rcc_enable_gpiob_clock();
+    rcc_enable_gpiob_clock();
 
     // Configure Chip Select pin
     cs_pin.port = GPIOB;

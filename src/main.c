@@ -20,9 +20,6 @@ extern uint32_t _edata[];
 extern uint32_t _sbss[];
 extern uint32_t _ebss[];
 extern uint32_t interrupt_vector_table[];
-bool msion = false;
-bool msirdy = false;
-uint32_t hz;
 
 void jump_to_bootloader()
 {
