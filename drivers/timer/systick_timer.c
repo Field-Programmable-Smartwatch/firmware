@@ -14,6 +14,12 @@ void systick_timer_init()
                      SysTick_CTRL_TICKINT_Msk);
 }
 
+void systick_timer_destroy()
+{
+    // TODO
+    return;
+}
+
 void systick_timer_reset()
 {
     tick_count = 0;
