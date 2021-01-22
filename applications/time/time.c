@@ -8,6 +8,7 @@
 #include <debug.h>
 #include <systick_timer.h>
 
+extern uint32_t _bootloader_magic[];
 
 char week_day[16] = "Monday";
 char month[16] = "January";
@@ -127,7 +128,7 @@ void change_time()
                     display_clear();
                     terminal_print_at(0, 4, "LOADING BOOTLOADER");
                     display_render();
-                    *((unsigned long *)0x20003FF0) = 0x10ADB007;
+                    *((unsigned long *)_bootloader_magic) = 0x10ADB007;
                     NVIC_SystemReset();
                 }
             }
@@ -196,7 +197,7 @@ void time_application_start()
                     display_clear();
                     terminal_print_at(0, 4, "LOADING BOOTLOADER");
                     display_render();
-                    *((unsigned long *)0x20003FF0) = 0x10ADB007;
+                    *((unsigned long *)_bootloader_magic) = 0x10ADB007;
                     NVIC_SystemReset();
                 }
             }

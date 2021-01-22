@@ -13,6 +13,7 @@
 #include <time.h>
 #include <rcc.h>
 
+extern uint32_t _bootloader_magic[];
 extern uint32_t _sidata[];
 extern uint32_t _sdata[];
 extern uint32_t _edata[];
@@ -38,8 +39,8 @@ void jump_to_bootloader()
 
 void main()
 {
-    if (*((unsigned long *)0x20003FF0) == 0x10ADB007) {
-        *((unsigned long *)0x20003FF0) = 0x00000000;
+    if (*((unsigned long *)_bootloader_magic) == 0x10ADB007) {
+        *((unsigned long *)_bootloader_magic) = 0x00000000;
         jump_to_bootloader();
     }
 

@@ -56,7 +56,8 @@ _Min_Stack_Size = 0x1000;   /* required amount of stack */
 MEMORY
 {
 FLASH (rx)                 : ORIGIN = 0x08000000, LENGTH = 512K
-RAM1 (xrw)                 : ORIGIN = 0x20000004, LENGTH = 0x2FFFC
+BOOTLOADER_MAGIC (rx)      : ORIGIN = 0x20000004, LENGTH = 0x4
+RAM1 (xrw)                 : ORIGIN = 0x20000008, LENGTH = 0x2FFF8
 RAM_SHARED (xrw)           : ORIGIN = 0x20030000, LENGTH = 10K
 }
 
@@ -124,6 +125,12 @@ SECTIONS
     KEEP (*(.fini_array*))
     PROVIDE_HIDDEN (__fini_array_end = .);
   } >FLASH
+
+  .bootloader_magic :
+  {
+    . = ALIGN(4);
+    _bootloader_magic = .;
+  } >BOOTLOADER_MAGIC
 
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
