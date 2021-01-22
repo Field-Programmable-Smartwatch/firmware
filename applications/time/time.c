@@ -7,6 +7,7 @@
 #include <terminal.h>
 #include <debug.h>
 #include <systick_timer.h>
+#include <menu.h>
 
 extern uint32_t _bootloader_magic[];
 
@@ -60,6 +61,8 @@ void change_time()
     bool time_changed;
     bool drop_event = true;
 
+    display_clear();
+    draw_time();
     terminal_print_at(0, 0, "Changing hours");
     display_render();
     
@@ -122,17 +125,7 @@ void change_time()
                         }
                     }
                 }
-
-                if (event.id == ID_BUTTON_LOAD_BOOTLOADER) {
-                    debug_print("LOADING BOOTLOADER!\r\n");
-                    display_clear();
-                    terminal_print_at(0, 4, "LOADING BOOTLOADER");
-                    display_render();
-                    *((unsigned long *)_bootloader_magic) = 0x10ADB007;
-                    NVIC_SystemReset();
-                }
-            }
-            
+            }            
         }
 
         if (time_changed) {
@@ -151,6 +144,7 @@ void change_time()
     }
 
     display_clear();
+    time_application_start();
 }
 
 void time_application_start()
@@ -181,24 +175,15 @@ void time_application_start()
             if (event.type == EVENT_TYPE_POS_EDGE) {
                 if (event.id == ID_BUTTON_UP) {
                     up_button_held = false;
-                    debug_print("Go to menu\r\n");
+                    menu_application_start();
                 }
 
                 if (event.id == ID_BUTTON_SELECT) {
-                    debug_print("Go to menu\r\n");
+                    menu_application_start();
                 }
 
                 if (event.id == ID_BUTTON_DOWN) {
-                    debug_print("Go to menu\r\n");
-                }
-
-                if (event.id == ID_BUTTON_LOAD_BOOTLOADER) {
-                    debug_print("LOADING BOOTLOADER!\r\n");
-                    display_clear();
-                    terminal_print_at(0, 4, "LOADING BOOTLOADER");
-                    display_render();
-                    *((unsigned long *)_bootloader_magic) = 0x10ADB007;
-                    NVIC_SystemReset();
+                    menu_application_start();
                 }
             }
         }

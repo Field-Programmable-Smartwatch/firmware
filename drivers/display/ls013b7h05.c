@@ -15,6 +15,7 @@ uint8_t vcom = 0;
 uint32_t display_buffer_size = (DISPLAY_WIDTH * DISPLAY_HEIGHT) / 8;
 uint8_t display_buffer[(DISPLAY_WIDTH * DISPLAY_HEIGHT) / 8];
 
+display_draw_attr_t g_draw_attr = DISPLAY_DRAW_ATTR_NORMAL;
 int32_t g_spi_handle = -1;
 
 static uint8_t reverse_byte(uint8_t value)
@@ -98,10 +99,20 @@ void display_draw_pixel(uint32_t x, uint32_t y, uint8_t value)
     uint32_t byte = ((y * DISPLAY_WIDTH) + (x)) / 8;
     uint8_t bit = 7 - (x % 8);
 
-    if (value) {
-        display_buffer[byte] |= 1 << bit;
-    } else {
-        display_buffer[byte] &= ~(1 << bit);
+    if (g_draw_attr == DISPLAY_DRAW_ATTR_NORMAL) {
+        if (value) {
+            display_buffer[byte] |= 1 << bit;
+        } else {
+            display_buffer[byte] &= ~(1 << bit);
+        }
+    }
+
+    if (g_draw_attr == DISPLAY_DRAW_ATTR_INVERT) {
+        if (value) {
+            display_buffer[byte] &= ~(1 << bit);
+        } else {
+            display_buffer[byte] |= 1 << bit;
+        }
     }
 }
 
@@ -128,4 +139,9 @@ void display_draw_bitmap(uint32_t x, uint32_t y, uint32_t width, uint32_t height
 void display_clear()
 {
     memset(display_buffer, 0, display_buffer_size);
+}
+
+void display_set_draw_attr(display_draw_attr_t attr)
+{
+    g_draw_attr = attr;
 }
