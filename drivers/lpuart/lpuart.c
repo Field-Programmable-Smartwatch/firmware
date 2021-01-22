@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <rcc.h>
 
 #define LPUART_DEVICE_MAX 8
 
@@ -26,8 +27,7 @@ static void lpuart_configure(int32_t lpuart_handle)
     lpuart_configuration_t *lpuart_dev = &g_lpuart_devices[lpuart_handle];
     
     g_current_lpuart_config = lpuart_handle;
-    RCC->CCIPR &= ~(1 << RCC_CCIPR_LPUART1SEL_Pos);
-    RCC->CCIPR |= lpuart_dev->clock_source << RCC_CCIPR_LPUART1SEL_Pos;
+    rcc_set_lpuart1_clock_source(lpuart_dev->clock_source);
     LPUART1->CR1 |= lpuart_dev->word_length << USART_CR1_M1_Pos;
     LPUART1->BRR = lpuart_dev->baud_rate_prescaler;
 }
@@ -107,7 +107,7 @@ void lpuart_close(int32_t lpuart_handle)
 
 void lpuart_init()
 {
-    RCC->APB1ENR2 |= 1;
+    rcc_enable_lpuart1_clock();
 
     // Enable LPUART
     LPUART1->CR1 |= USART_CR1_UE | USART_CR1_TE | USART_CR1_RE;

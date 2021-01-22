@@ -6,6 +6,7 @@
 #include <debug.h>
 #include <spi.h>
 #include <display.h>
+#include <rcc.h>
 
 #define DISPLAY_WIDTH 144
 #define DISPLAY_HEIGHT 168
@@ -32,6 +33,7 @@ void display_init()
 
     // Enable clock for GPIO port B
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+    // rcc_enable_gpiob_clock();
 
     // Configure Chip Select pin
     cs_pin.port = GPIOB;

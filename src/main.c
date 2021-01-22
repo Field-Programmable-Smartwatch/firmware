@@ -11,6 +11,7 @@
 #include <systick_timer.h>
 #include <event_handler.h>
 #include <time.h>
+#include <rcc.h>
 
 extern uint32_t _sidata[];
 extern uint32_t _sdata[];
@@ -80,23 +81,10 @@ void __attribute__((naked)) Reset_Handler()
     // Set Interrupt Vector Table Offset
     SCB->VTOR = (uint32_t)interrupt_vector_table;
 
-    // Reset Clock Configuration
-    RCC->CFGR = 0x00070000;
-    RCC->CR &= 0xFAF6FEFB;
-    RCC->CSR &= 0xFFFFFFFA;
-    RCC->CRRCR &= 0xFFFFFFFE;
-    RCC->PLLCFGR = 0x22041000;
-    RCC->PLLSAI1CFGR = 0x22041000;
-    
-    // Set MSI clock speed to 16Mhz
-    RCC->CR &= ~RCC_CR_MSION;
-    RCC->CR &= ~(0xF << 4);
-    RCC->CR |= 8 << 4;
-    
-    // Set MSI Clock as the System Clock
-    RCC->CR |= RCC_CR_MSION;
+    rcc_reset();
+    rcc_set_msi_clock_speed(RCC_MSI_CLOCK_SPEED_16MHz);
+    rcc_set_system_clock_source(RCC_SYSTEM_CLOCK_SOURCE_MSI);
+    rcc_disable_interrupts();
 
-    // Disable Interrupts
-    RCC->CIER = 0x00000000;
     main();
 }

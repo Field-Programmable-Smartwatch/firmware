@@ -3,14 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-// TODO: this should most definitely be in an RCC driver
-typedef enum lpuart_clock_source {
-    LPUART_CLOCK_SOURCE_PCLK,
-    LPUART_CLOCK_SOURCE_SYSCLK,
-    LPUART_CLOCK_SOURCE_HSI16,
-    LPUART_CLOCK_SOURCE_LSE
-} lpuart_clock_source_t;
+#include <rcc.h>
 
 typedef enum lpuart_word_length {
     LPUART_WORD_LENGTH_8,
@@ -25,7 +18,7 @@ typedef enum lpuart_stop_bits {
 
 typedef struct lpuart_configuration {
     bool is_open;
-    lpuart_clock_source_t clock_source;
+    rcc_lpuart_clock_source_t clock_source;
     lpuart_word_length_t word_length;
     uint32_t baud_rate_prescaler;
     lpuart_stop_bits_t stop_bits;

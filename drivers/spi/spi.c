@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "spi.h"
+#include <rcc.h>
 #include <debug.h>
 #include <gpio.h>
 #include <string.h>
@@ -136,8 +137,8 @@ void spi_init()
     gpio_configuration_t miso_pin;
     gpio_configuration_t mosi_pin;
 
-    RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
-    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+    rcc_enable_spi1_clock();
+    rcc_enable_gpioa_clock();
     
     sck_pin.port = GPIOA;
     sck_pin.pin = 5;

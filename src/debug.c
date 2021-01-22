@@ -4,6 +4,7 @@
 #include <gpio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <rcc.h>
 
 int32_t g_lpuart_handle = -1;
 
@@ -12,7 +13,7 @@ void debug_init()
     gpio_configuration_t tx_pin_config;
     lpuart_configuration_t lpuart_config;
 
-    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+    rcc_enable_gpioa_clock();
 
     tx_pin_config.port = GPIOA;
     tx_pin_config.pin = 2;
@@ -23,7 +24,7 @@ void debug_init()
     tx_pin_config.alternative_function = 8;
     gpio_configure_pin(tx_pin_config);
 
-    lpuart_config.clock_source = LPUART_CLOCK_SOURCE_SYSCLK;
+    lpuart_config.clock_source = RCC_LPUART_CLOCK_SOURCE_SYSCLK;
     lpuart_config.word_length = LPUART_WORD_LENGTH_8;
     lpuart_config.baud_rate_prescaler = 0x8ae3;
     lpuart_config.stop_bits = LPUART_STOP_BITS_1;
