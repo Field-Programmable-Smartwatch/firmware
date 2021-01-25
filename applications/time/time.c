@@ -8,8 +8,8 @@
 #include <debug.h>
 #include <systick_timer.h>
 #include <menu.h>
-
-extern uint32_t _bootloader_magic[];
+#include <task_manager.h>
+#include <string.h>
 
 char week_day[16] = "Monday";
 char month[16] = "January";
@@ -56,6 +56,7 @@ bool update_time()
 
 void change_time()
 {
+    task_t *task = task_manager_get_task_by_name("Set Time");
     uint8_t select_button_count = 0;
     event_queue_t event_queue;
     bool time_changed;
@@ -66,7 +67,7 @@ void change_time()
     terminal_print_at(0, 0, "Changing hours");
     display_render();
     
-    while (select_button_count < 3) {
+    while (task->status == TASK_STATUS_RUNNING) {
         asm("wfi");
         time_changed = false;
         event_queue = event_handler_poll();
@@ -101,6 +102,10 @@ void change_time()
                 }
 
                 if (event.id == ID_BUTTON_SELECT) {
+                    if (select_button_count == 3) {
+                        task->status = TASK_STATUS_STOP;
+                        task_manager_start_task_by_name("Time");
+                    }
                     select_button_count++;
                 }
 
@@ -142,48 +147,36 @@ void change_time()
             display_render();
         }
     }
-
-    display_clear();
-    time_application_start();
 }
 
 void time_application_start()
 {
+    task_t *task = task_manager_get_task_by_name("Time");
     event_queue_t event_queue;
-    uint32_t up_button_held_tick;
-    bool up_button_held = false;
     display_clear();
     draw_time();
     display_render();
     seconds_tick = systick_timer_get_tick_count();
-    while (1) {
+    while (task->status == TASK_STATUS_RUNNING) {
         asm("wfi");
-        if (up_button_held && (systick_timer_get_tick_count() - up_button_held_tick > 3000)) {
-            up_button_held = false;
-            change_time();
-        }
         bool time_changed = update_time();
         event_queue = event_handler_poll();
         for (uint8_t i = 0; i < event_queue.length; i++) {
             event_t event = event_queue.events[i];
-            if (event.type == EVENT_TYPE_NEG_EDGE) {
-                if (event.id == ID_BUTTON_UP) {
-                    up_button_held = true;
-                    up_button_held_tick = systick_timer_get_tick_count();
-                }
-            }
             if (event.type == EVENT_TYPE_POS_EDGE) {
                 if (event.id == ID_BUTTON_UP) {
-                    up_button_held = false;
-                    menu_application_start();
+                    task->status = TASK_STATUS_STOP;
+                    task_manager_start_task_by_name("Menu");
                 }
 
                 if (event.id == ID_BUTTON_SELECT) {
-                    menu_application_start();
+                    task->status = TASK_STATUS_STOP;
+                    task_manager_start_task_by_name("Menu");
                 }
 
                 if (event.id == ID_BUTTON_DOWN) {
-                    menu_application_start();
+                    task->status = TASK_STATUS_STOP;
+                    task_manager_start_task_by_name("Menu");
                 }
             }
         }

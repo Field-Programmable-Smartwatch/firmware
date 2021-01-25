@@ -47,6 +47,24 @@ char *strncpy(char *dest, const char *src, uint32_t size)
     return dest;
 }
 
+int32_t strncmp(const char* str1, const char *str2, uint32_t size)
+{
+    for (uint32_t i = 0;;i++) {
+        if (str1[i] < str2[i]) {
+            return -1;
+        }
+
+        if (str1[i] > str2[i]) {
+            return 1;
+        }
+
+        if (str1[i] == 0) {
+            break;
+        }
+    }
+    return 0;
+}
+
 uint32_t uint_to_str(char *dest, uint32_t u, const uint32_t size, uint32_t zero_padding)
 {
     if (size == 0) {

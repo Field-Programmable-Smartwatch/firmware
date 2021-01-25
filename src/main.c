@@ -12,6 +12,7 @@
 #include <event_handler.h>
 #include <time.h>
 #include <rcc.h>
+#include <task_manager.h>
 
 extern uint32_t _bootloader_magic[];
 extern uint32_t _sidata[];
@@ -60,7 +61,8 @@ void main()
     terminal.height = 10;
     terminal_init(terminal);
 
-    time_application_start();
+    task_manager_init();
+    task_manager_start();
 }
 
 void __attribute__((naked)) Reset_Handler()
