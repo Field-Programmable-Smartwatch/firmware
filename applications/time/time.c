@@ -60,7 +60,6 @@ void change_time()
     uint8_t select_button_count = 0;
     event_queue_t event_queue;
     bool time_changed;
-    bool drop_event = true;
 
     display_clear();
     draw_time();
@@ -74,10 +73,6 @@ void change_time()
         for (uint8_t i = 0; i < event_queue.length; i++) {
             event_t event = event_queue.events[i];
             if (event.type == EVENT_TYPE_POS_EDGE) {
-                if (drop_event) { // Drop the first button press event
-                    drop_event = false;
-                    continue;
-                }
                 time_changed = true;
                 if (event.id == ID_BUTTON_UP) {
                     if (select_button_count == 0) {
@@ -102,7 +97,7 @@ void change_time()
                 }
 
                 if (event.id == ID_BUTTON_SELECT) {
-                    if (select_button_count == 3) {
+                    if (select_button_count == 2) {
                         task->status = TASK_STATUS_STOP;
                         task_manager_start_task_by_name("Time");
                     }
