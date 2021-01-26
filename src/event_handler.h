@@ -28,6 +28,7 @@ typedef struct event_queue {
 } event_queue_t;
 
 typedef struct event_source {
+    bool active;
     uint8_t id;
     GPIO_TypeDef *gpio_port;
     uint8_t gpio_pin;

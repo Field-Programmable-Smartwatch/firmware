@@ -6,19 +6,36 @@
 #include <systick_timer.h>
 #include <debug.h>
 
-#define EVENT_SOURCE_LENGTH 4
+#define EVENT_SOURCE_MAX 3
 #define DEBOUNCE_THRESHOLD 5 // In millisec
 
-event_source_t source[EVENT_SOURCE_LENGTH];
+event_source_t g_source[EVENT_SOURCE_MAX];
 
-static void event_source_init(event_source_t *event_source, uint32_t id, GPIO_TypeDef *gpio_port, uint8_t gpio_pin)
+static event_source_t *event_handler_find_inactive_event_source()
 {
+    event_source_t *event_source = 0;
+    for (uint32_t i = 0; i < EVENT_SOURCE_MAX; i++) {
+        if (g_source[i].active) {
+            continue;
+        }
+        event_source = &g_source[i];
+        break;
+    }
+
+    return event_source;
+}
+
+static void event_handler_add_event_source(uint32_t id, GPIO_TypeDef *gpio_port, uint8_t gpio_pin)
+{
+    event_source_t *event_source = event_handler_find_inactive_event_source();
+    
     if (!event_source) {
         debug_print("ERROR: event_source_add: passed NULL event_source\r\n");
         return;
     }
-
+    
     memset(event_source, 0, sizeof(event_source_t));
+    event_source->active = true;
     event_source->id = id;
     event_source->gpio_port = gpio_port;
     event_source->gpio_pin = gpio_pin;
@@ -27,19 +44,9 @@ static void event_source_init(event_source_t *event_source, uint32_t id, GPIO_Ty
 
 void event_handler_init()
 {
-    gpio_configuration_t gpio_pb6;
     gpio_configuration_t gpio_pb5;
     gpio_configuration_t gpio_pb4;
     gpio_configuration_t gpio_pb3;
-
-    gpio_pb6.port = GPIOB;
-    gpio_pb6.pin = 6;
-    gpio_pb6.mode = GPIO_MODE_INPUT;
-    gpio_pb6.output_type = GPIO_OUTPUT_TYPE_PUSH_PULL;
-    gpio_pb6.output_speed = GPIO_OUTPUT_SPEED_LOW;
-    gpio_pb6.pull_resistor = GPIO_PULL_RESISTOR_UP;
-    gpio_configure_pin(gpio_pb6);
-    event_source_init(&source[0], ID_BUTTON_UP, GPIOB, 6);
 
     gpio_pb5.port = GPIOB;
     gpio_pb5.pin = 5;
@@ -48,7 +55,7 @@ void event_handler_init()
     gpio_pb5.output_speed = GPIO_OUTPUT_SPEED_LOW;
     gpio_pb5.pull_resistor = GPIO_PULL_RESISTOR_UP;
     gpio_configure_pin(gpio_pb5);
-    event_source_init(&source[1], ID_BUTTON_SELECT, GPIOB, 5);
+    event_handler_add_event_source(ID_BUTTON_UP, GPIOB, 5);
 
     gpio_pb4.port = GPIOB;
     gpio_pb4.pin = 4;
@@ -57,7 +64,7 @@ void event_handler_init()
     gpio_pb4.output_speed = GPIO_OUTPUT_SPEED_LOW;
     gpio_pb4.pull_resistor = GPIO_PULL_RESISTOR_UP;
     gpio_configure_pin(gpio_pb4);
-    event_source_init(&source[2], ID_BUTTON_DOWN, GPIOB, 4);
+    event_handler_add_event_source(ID_BUTTON_SELECT, GPIOB, 4);
 
     gpio_pb3.port = GPIOB;
     gpio_pb3.pin = 3;
@@ -66,8 +73,7 @@ void event_handler_init()
     gpio_pb3.output_speed = GPIO_OUTPUT_SPEED_LOW;
     gpio_pb3.pull_resistor = GPIO_PULL_RESISTOR_UP;
     gpio_configure_pin(gpio_pb3);
-    event_source_init(&source[3], ID_BUTTON_LOAD_BOOTLOADER, GPIOB, 3);
-
+    event_handler_add_event_source(ID_BUTTON_DOWN, GPIOB, 3);
 }
 
 static uint8_t event_source_read_input(event_source_t *event_source)
@@ -88,23 +94,26 @@ event_queue_t event_handler_poll()
 {
     event_queue_t event_queue;
     event_queue.length = 0;
-    for (uint32_t i = 0; i < EVENT_SOURCE_LENGTH; i++) {
-        uint8_t current_input = event_source_read_input(&source[i]);
-        if (current_input != source[i].input_value) {
-            source[i].input_value = current_input;
-            if (!source[i].masked) {
-                source[i].masked = true;
+    for (uint32_t i = 0; i < EVENT_SOURCE_MAX; i++) {
+        if (!g_source[i].active) {
+            continue;
+        }
+        uint8_t current_input = event_source_read_input(&g_source[i]);
+        if (current_input != g_source[i].input_value) {
+            g_source[i].input_value = current_input;
+            if (!g_source[i].masked) {
+                g_source[i].masked = true;
             }
-            source[i].unmask_tick = systick_timer_get_tick_count() + DEBOUNCE_THRESHOLD;
+            g_source[i].unmask_tick = systick_timer_get_tick_count() + DEBOUNCE_THRESHOLD;
             continue;
         }
 
-        if (source[i].masked &&
-            systick_timer_get_tick_count() >= source[i].unmask_tick) {
+        if (g_source[i].masked &&
+            systick_timer_get_tick_count() >= g_source[i].unmask_tick) {
             event_t event;
-            source[i].masked = false;
-            event.id = source[i].id;
-            if (source[i].input_value) {
+            g_source[i].masked = false;
+            event.id = g_source[i].id;
+            if (g_source[i].input_value) {
                 event.type = EVENT_TYPE_POS_EDGE;
             } else {
                 event.type = EVENT_TYPE_NEG_EDGE;
