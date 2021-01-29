@@ -13,6 +13,7 @@
 #include <time.h>
 #include <rcc.h>
 #include <task_manager.h>
+#include <sdcard.h>
 
 extern uint32_t _bootloader_magic[];
 extern uint32_t _sidata[];
@@ -50,11 +51,13 @@ void main()
 
     lpuart_init();
     spi_init();
+
+    systick_timer_init();
+    systick_timer_start();
     
     debug_init();
     display_init();
-    systick_timer_init();
-    systick_timer_start();
+    sdcard_init();
     event_handler_init();
 
     terminal.width = 18;

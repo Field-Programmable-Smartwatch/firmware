@@ -61,10 +61,23 @@ static bool spi_tx_buffer_empty()
     return (bool)(SPI1->SR & 2);
 }
 
+static bool spi_rx_buffer_empty()
+{
+    return (bool)!(SPI1->SR & 1);
+}
+
 static void spi_transmit_8bit(uint8_t data)
 {
     while (!spi_tx_buffer_empty()) {}
     *(uint8_t *)&SPI1->DR = data;
+}
+
+static void spi_receive_8bit(uint8_t *data)
+{
+    if (spi_rx_buffer_empty()) {
+        //debug_print("empty\r\n");
+    }
+    *data = SPI1->DR;   
 }
 
 static int32_t spi_find_free_device()
@@ -88,9 +101,42 @@ static int32_t spi_find_free_device()
     return -1;
 }
 
+void spi_read_write(int32_t spi_handle, void *rdata, uint8_t wdata, uint32_t length)
+{
+    if (spi_handle < 0 ||
+        spi_handle >= SPI_DEVICE_MAX ||
+        !g_spi_devices[spi_handle].is_open) {
+        return;
+    }
+
+    if (g_current_spi_config != spi_handle) {
+        spi_configure(spi_handle);
+    }
+    
+    uint8_t *rd = rdata;
+    while (length--) {
+        spi_transmit_8bit(wdata);
+        spi_receive_8bit(rd++);
+    }
+}
+
 void spi_read(int32_t spi_handle, void *buffer, uint32_t length)
 {
-    // TODO
+    if (spi_handle < 0 ||
+        spi_handle >= SPI_DEVICE_MAX ||
+        !g_spi_devices[spi_handle].is_open) {
+        return;
+    }
+
+    if (g_current_spi_config != spi_handle) {
+        spi_configure(spi_handle);
+    }
+    
+    uint8_t *d = buffer;
+    while (length--) {
+        spi_receive_8bit(d++);
+    }
+    
     return;
 }
 
@@ -100,6 +146,10 @@ void spi_write(int32_t spi_handle, void *data, uint32_t length)
         spi_handle >= SPI_DEVICE_MAX ||
         !g_spi_devices[spi_handle].is_open) {
         return;
+    }
+
+    if (g_current_spi_config != spi_handle) {
+        spi_configure(spi_handle);
     }
     
     uint8_t *d = data;

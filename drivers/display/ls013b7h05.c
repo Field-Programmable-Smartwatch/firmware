@@ -16,7 +16,7 @@ uint32_t display_buffer_size = (DISPLAY_WIDTH * DISPLAY_HEIGHT) / 8;
 uint8_t display_buffer[(DISPLAY_WIDTH * DISPLAY_HEIGHT) / 8];
 
 display_draw_attr_t g_draw_attr = DISPLAY_DRAW_ATTR_NORMAL;
-int32_t g_spi_handle = -1;
+static int32_t g_spi_handle = -1;
 
 static uint8_t reverse_byte(uint8_t value)
 {
