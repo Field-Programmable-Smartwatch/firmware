@@ -75,7 +75,7 @@ static void spi_transmit_8bit(uint8_t data)
 static void spi_receive_8bit(uint8_t *data)
 {
     if (spi_rx_buffer_empty()) {
-        //debug_print("empty\r\n");
+        debug_print("empty\r\n");
     }
     *data = SPI1->DR;   
 }

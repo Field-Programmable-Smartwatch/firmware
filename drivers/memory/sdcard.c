@@ -62,10 +62,8 @@ void sdcard_read_block(uint32_t addr, void *buffer)
     sdcard_select();
     uint8_t *data = buffer;
     uint16_t crc;
-    if (sdcard_send_command(17, addr)) {
+    while (sdcard_send_command(17, addr)) {
         debug_print("Failed to read block\r\n");
-        sdcard_deselect();
-        return;
     }
     
     // Wait for data block
@@ -83,10 +81,8 @@ void sdcard_read_block(uint32_t addr, void *buffer)
 void sdcard_write_block(uint32_t addr, void *buffer)
 {
     sdcard_select();
-    if (sdcard_send_command(24, addr)) {
+    while (sdcard_send_command(24, addr)) {
         debug_print("Failed to write block\r\n");
-        sdcard_deselect();
-        return;
     }
     
     uint8_t msg[515];
@@ -141,14 +137,15 @@ void sdcard_init()
     spi1.data_size = SPI_DATA_SIZE_8BIT;
     g_spi_handle = spi_open(spi1);
 
-    for (uint32_t i = 0; i < 16; i++) {
+    for (uint32_t i = 0; i < 100; i++) {
         uint8_t msg = 0xff;
         spi_write(g_spi_handle, &msg, 1);
     }
 
-    gpio_write(GPIOB, 6, 0);
-    while (sdcard_send_command(0, 0) != 0x01) {
-        debug_print("sdcard_init: retrying GO_IDLE_STATE cmd\r\n");
+    sdcard_select();
+    uint8_t test = 0;
+    while ((test = sdcard_send_command(0, 0)) != 0x01) {
+        debug_print("sdcard_init: retrying GO_IDLE_STATE cmd %u\r\n", test);
     }
     
     if (sdcard_send_command(8, 0x1AA) & 0x4) {
@@ -163,9 +160,5 @@ void sdcard_init()
         status = sdcard_send_command(41, 0x40000000);
     }
 
-    if (sdcard_send_command(58, 0)) {
-        debug_print("sdcard_init: retrying READ_OCR cmd\r\n");
-        return;
-    }
-    gpio_write(GPIOB, 6, 1);
+    sdcard_deselect();
 }

@@ -44,42 +44,33 @@
 */
 
 /* Entry Point */
-ENTRY(main)
+ENTRY(bootloader_main)
 
 /* Highest address of the user mode stack */
-_estack = 0x2002F000;    /* end of RAM */
-/* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x400;      /* required amount of heap  */
-_Min_Stack_Size = 0x1000;   /* required amount of stack */
+_estack = 0x20030000;    /* end of RAM */
+/* Generate a link error if the stack don't fit into RAM */
+_Min_Stack_Size = 0x500;   /* required amount of stack */
 
 /* Specify the memory areas */
 MEMORY
 {
-BOOTLOADER_MAGIC (xrw)      : ORIGIN = 0x20000004, LENGTH = 0x4
-RAM1 (xrw)                 : ORIGIN = 0x20002000, LENGTH = 0x2FFFF
-RAM_SHARED (xrw)           : ORIGIN = 0x20030000, LENGTH = 10K
+FLASH (rx)                 : ORIGIN = 0x08000000, LENGTH = 512K
+BOOTLOADER_MAGIC (rx)      : ORIGIN = 0x20000004, LENGTH = 0x4
+RAM1 (xrw)                 : ORIGIN = 0x20000008, LENGTH = 0x1ffc
 }
 
 /* Define output sections */
 SECTIONS
 {
-  /* The startup code goes first into RAM */
+  /* The startup code goes first into FLASH */
   .isr_vector :
   {
     . = ALIGN(4);
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
-  } >RAM1
-  
-  .bootloader_magic :
-  {
-    . = ALIGN(4);
-    _bootloader_magic = .;
-    KEEP(*(.bootloader_magic))
-    . = ALIGN(4);
-  } >BOOTLOADER_MAGIC
+  } >FLASH
 
-  /* The program code and other data goes into RAM */
+  /* The program code and other data goes into FLASH */
   .text :
   {
     . = ALIGN(4);
@@ -94,7 +85,7 @@ SECTIONS
 
     . = ALIGN(4);
     _etext = .;        /* define a global symbols at end of code */
-  } >RAM1
+  } >FLASH
 
   /* Constant data goes into FLASH */
   .rodata :
@@ -103,35 +94,41 @@ SECTIONS
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
-  } >RAM1
+  } >FLASH
 
-  .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >RAM1
+  .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >FLASH
   .ARM : {
     __exidx_start = .;
     *(.ARM.exidx*)
     __exidx_end = .;
-  } >RAM1
+  } >FLASH
 
   .preinit_array     :
   {
     PROVIDE_HIDDEN (__preinit_array_start = .);
     KEEP (*(.preinit_array*))
     PROVIDE_HIDDEN (__preinit_array_end = .);
-  } >RAM1
+  } >FLASH
   .init_array :
   {
     PROVIDE_HIDDEN (__init_array_start = .);
     KEEP (*(SORT(.init_array.*)))
     KEEP (*(.init_array*))
     PROVIDE_HIDDEN (__init_array_end = .);
-  } >RAM1
+  } >FLASH
   .fini_array :
   {
     PROVIDE_HIDDEN (__fini_array_start = .);
     KEEP (*(SORT(.fini_array.*)))
     KEEP (*(.fini_array*))
     PROVIDE_HIDDEN (__fini_array_end = .);
-  } >RAM1
+  } >FLASH
+
+  .bootloader_magic :
+  {
+    . = ALIGN(4);
+    _bootloader_magic = .;
+  } >BOOTLOADER_MAGIC
 
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
@@ -146,7 +143,7 @@ SECTIONS
 
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
-  } >RAM1
+  } >RAM1 AT> FLASH
 
   
   /* Uninitialized data section */
@@ -171,15 +168,14 @@ SECTIONS
     . = ALIGN(8);
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
-    . = . + _Min_Heap_Size;
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM1
 
-  .ARM.attributes 0       : { *(.ARM.attributes) }
-   MAPPING_TABLE (NOLOAD) : { *(MAPPING_TABLE) } >RAM_SHARED
-   MB_MEM1 (NOLOAD)       : { *(MB_MEM1) } >RAM_SHARED
-   MB_MEM2 (NOLOAD)       : { _sMB_MEM2 = . ; *(MB_MEM2) ; _eMB_MEM2 = . ; } >RAM_SHARED
+  /* .ARM.attributes 0       : { *(.ARM.attributes) } */
+  /*  MAPPING_TABLE (NOLOAD) : { *(MAPPING_TABLE) } >RAM_SHARED */
+  /*  MB_MEM1 (NOLOAD)       : { *(MB_MEM1) } >RAM_SHARED */
+  /*  MB_MEM2 (NOLOAD)       : { _sMB_MEM2 = . ; *(MB_MEM2) ; _eMB_MEM2 = . ; } >RAM_SHARED */
 }
 
 
