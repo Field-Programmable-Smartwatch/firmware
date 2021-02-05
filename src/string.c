@@ -4,11 +4,12 @@
 
 #define INT_STR_MAX_LENGTH 12
 
+char g_char_lut[] = "0123456789abcdef";
+
 void *memcpy(void *dest, void *src, uint32_t size)
 {
     uint8_t *d = dest;
     uint8_t *s = src;
-
     for (uint32_t i = 0; i < size; i++) {
         d[i] = s[i];
     }
@@ -65,12 +66,12 @@ int32_t strncmp(const char* str1, const char *str2, uint32_t size)
     return 0;
 }
 
-uint32_t uint_to_str(char *dest, uint32_t u, const uint32_t size, uint32_t zero_padding)
+uint32_t uint_to_str(char *dest, uint32_t u, const uint32_t size, uint32_t zero_padding, uint32_t base)
 {
     if (size == 0) {
         return 0;
     }
-
+    
     if (zero_padding > INT_STR_MAX_LENGTH - 1) {
         zero_padding = INT_STR_MAX_LENGTH - 1;
     }
@@ -79,17 +80,22 @@ uint32_t uint_to_str(char *dest, uint32_t u, const uint32_t size, uint32_t zero_
     str[INT_STR_MAX_LENGTH - 1] = 0;
     uint32_t str_index = INT_STR_MAX_LENGTH - 1;
     uint32_t bytes_copied = 0;
-
+    
     do {
-        uint8_t digit = u % 10;
-        str[--str_index] = digit | 48; // convert raw digit to ascii representation
+        uint8_t digit = u % base;
+        str[--str_index] = g_char_lut[digit]; // convert raw digit to ascii representation
         u -= digit;
-        u /= 10;
+        u /= base;
         if (zero_padding) {
             zero_padding--;
         }
     } while (u || zero_padding);
 
+    if (base == 16) {
+        str[--str_index] = 'x';
+        str[--str_index] = '0';
+    }
+    
     while (bytes_copied < size && str[str_index]) {
         dest[bytes_copied++] = str[str_index++];
     }
@@ -97,10 +103,10 @@ uint32_t uint_to_str(char *dest, uint32_t u, const uint32_t size, uint32_t zero_
     return bytes_copied;
 }
 
-uint32_t int_to_str(char *dest, const int32_t i, const uint32_t size, uint32_t zero_padding)
+uint32_t int_to_str(char *dest, const int32_t i, const uint32_t size, uint32_t zero_padding, uint32_t base)
 {
     if (i > 0) {
-        return uint_to_str(dest, i, size, zero_padding);
+        return uint_to_str(dest, i, size, zero_padding, base);
     }
 
     if (zero_padding > 9) {
@@ -115,10 +121,10 @@ uint32_t int_to_str(char *dest, const int32_t i, const uint32_t size, uint32_t z
     uint32_t bytes_copied = 0;
     
     do {
-        uint8_t digit = u % 10;
-        str[str_index--] = digit | 48; // convert raw digit to ascii representation
+        uint8_t digit = u % base;
+        str[str_index--] = g_char_lut[digit]; // convert raw digit to ascii representation
         u -= digit;
-        u /= 10;
+        u /= base;
         if (zero_padding) {
             zero_padding--;
         }
@@ -184,13 +190,18 @@ void string_format(char *format, va_list ap, char *dest, uint32_t dest_size)
 
             if (format[format_index+1] == 'u') {
                 u = va_arg(ap, uint32_t);
-                dest_length += uint_to_str(&dest[dest_length], u, dest_size - dest_length, zero_padding);
+                dest_length += uint_to_str(&dest[dest_length], u, dest_size - dest_length, zero_padding, 10);
             }
             
             if (format[format_index+1] == 'i' ||
                 format[format_index+1] == 'd') {
                 i = va_arg(ap, int32_t);
-                dest_length += int_to_str(&dest[dest_length], i, dest_size - dest_length, zero_padding);
+                dest_length += int_to_str(&dest[dest_length], i, dest_size - dest_length, zero_padding, 10);
+            }
+
+            if (format[format_index+1] == 'x') {
+                u = va_arg(ap, uint32_t);
+                dest_length += uint_to_str(&dest[dest_length], u, dest_size - dest_length, zero_padding, 16);
             }
             
             if (format[format_index+1] == 's') {
