@@ -8,7 +8,7 @@
 #include <spi.h>
 #include <rcc.h>
 #include <sdcard.h>
-#include <systick_timer.h>
+#include <elf32.h>
 
 #define KERNEL_START_ADDR 0x20002000
 #define KERNEL_SIZE_IN_BLOCKS 35
@@ -48,6 +48,7 @@ void jump_to_kernel_main()
 void load_kernel()
 {
     uint8_t block[512];
+
     memset(block , 0, 512);
     uint8_t *addr = (uint8_t *)(KERNEL_START_ADDR);
     for (uint32_t i = 0; i < KERNEL_SIZE_IN_BLOCKS; i++) {
@@ -76,7 +77,8 @@ void bootloader_main()
     
     debug_init();
     sdcard_init();
-    load_kernel();
+    //load_kernel();
+    elf_load();
     jump_to_kernel_main();
 }
 

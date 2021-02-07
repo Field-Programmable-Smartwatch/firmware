@@ -9,7 +9,7 @@ INCLUDE = -Iinclude -Ilibraries -Isrc -Ibootloader \
           $(foreach inc_path, $(wildcard drivers/*), -I$(inc_path)) \
           $(foreach inc_path, $(wildcard applications/*), -I$(inc_path))
 CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=$(CPU) $(INCLUDE) -MMD -MF $(DEPDIR)/$*.d
-LDFLAGS = -static
+LDFLAGS = --omagic -static
 
 DEPDIR = .deps/
 
@@ -52,7 +52,7 @@ bootloader.elf: $(BOOTLOADER_OBJECTS) bootloader-linker.ld
 
 .PHONY: dd
 dd:
-	sudo dd if=fpsw.bin of=/dev/mmcblk0 bs=512
+	sudo dd if=fpsw.elf of=/dev/mmcblk0 bs=512
 	sudo rm /dev/mmcblk0 # Need to do this for some weird linux bug
 
 .PHONY: flash-%

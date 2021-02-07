@@ -53,9 +53,10 @@ _Min_Heap_Size = 0x400;      /* required amount of heap  */
 _Min_Stack_Size = 0x1000;   /* required amount of stack */
 
 /* Specify the memory areas */
+
 MEMORY
 {
-BOOTLOADER_MAGIC (xrw)      : ORIGIN = 0x20000004, LENGTH = 0x4
+BOOTLOADER_MAGIC (xrw)     : ORIGIN = 0x20000004, LENGTH = 0x4
 RAM1 (xrw)                 : ORIGIN = 0x20002000, LENGTH = 0x2FFFF
 RAM_SHARED (xrw)           : ORIGIN = 0x20030000, LENGTH = 10K
 }
