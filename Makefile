@@ -52,8 +52,7 @@ bootloader.elf: $(BOOTLOADER_OBJECTS) bootloader-linker.ld
 
 .PHONY: dd
 dd:
-	sudo dd if=fpsw.elf of=/dev/mmcblk0 bs=512
-	sudo rm /dev/mmcblk0 # Need to do this for some weird linux bug
+	sudo dd if=fpsw.elf of=$(DEV) bs=512
 
 .PHONY: flash-%
 flash-%:

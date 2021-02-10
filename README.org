@@ -3,10 +3,16 @@ This repository contains source code for the firmware and drivers
 for the STM32WB55 microcontroller.
 
 ** Directory Structure
-- drivers: Contains code to drive specific peripherals, devices, and interfaces
-- include: Contains header files that define structures and and
-  various locations in memory to configure the chip
-- src: Contains the firmware source for the smartwatch
+#+BEGIN_SRC
+applications: Contains code to build Application programs to run on the watch
+bootloader: Contains code to read elf images off an SD card and load/execute 
+            the binary in RAM
+drivers: Contains code to drive specific peripherals, devices, and interfaces
+include: Contains header files that define structures and and various locations 
+         in memory to configure the chip
+libraries: Contains code that is used universally throughout the project
+src: Contains the smartwatch operating system code
+#+END_SRC
 
 ** How To Build
 First, you will need an ARM cross compiler. Please follow the
@@ -16,18 +22,25 @@ instructions [[https://github.com/Field-Programmable-Smartwatch/compiler][here]]
 make
 #+END_SRC
 
-This command will build all the fpsw binary and output it as
-fpsw.bin
+This command will build the bootloader binary and the fpsw elf binary
 
 Please note that by default it will look for the cross compiler binary
 in the path determined by CROSS_PATH which is in the example
 Makefile.
 
-** How to Flash the firmware to the smartwatch
+** How to Flash the bootloader to the smartwatch
 Flip the boot mode enable switch to the on position and reset the
 device. Then connect the device to the computer via USB and run the
 following command:
 
 #+BEGIN_SRC
-make flash-fpsw
+make flash-bootloader
+#+END_SRC
+
+** How to flash the Operating System to an SD card
+After the bootloader is flashed to the on-board flash memory, you're
+going to want to flash the smartwatch operating system to an SD card.
+
+#+BEGIN_SRC
+DEV=/path/to/sdcard/device make dd
 #+END_SRC
