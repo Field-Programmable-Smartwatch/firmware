@@ -4,14 +4,19 @@ for the STM32WB55 microcontroller.
 
 ** Directory Structure
 #+BEGIN_SRC
-applications: Contains code to build Application programs to run on the watch
-bootloader: Contains code to read elf images off an SD card and load/execute 
-            the binary in RAM
-drivers: Contains code to drive specific peripherals, devices, and interfaces
-include: Contains header files that define structures and and various locations 
-         in memory to configure the chip
-libraries: Contains code that is used universally throughout the project
-src: Contains the smartwatch operating system code
+applications/    Contains code to build Application programs to run on the watch
+
+bootloader/      Contains code to read elf images off an SD card and load/execute 
+                 the binary in RAM
+                 
+drivers/         Contains code to drive specific peripherals, devices, and interfaces
+
+include/         Contains header files that define structures and and various locations 
+                 in memory to configure the chip
+                 
+libraries/       Contains code that is used universally throughout the project
+
+src/             Contains the smartwatch operating system code
 #+END_SRC
 
 ** How To Build
