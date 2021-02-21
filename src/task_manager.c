@@ -2,7 +2,7 @@
 #include <task_manager.h>
 #include <stdint.h>
 #include <string.h>
-#include <time.h>
+#include <time_app.h>
 #include <menu.h>
 #include <display.h>
 #include <terminal.h>

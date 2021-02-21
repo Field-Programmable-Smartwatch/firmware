@@ -46,6 +46,12 @@ void rcc_set_lpuart1_clock_source(rcc_lpuart_clock_source_t lpuart_clock_source)
     RCC->CCIPR |= lpuart_clock_source << RCC_CCIPR_LPUART1SEL_Pos;
 }
 
+void rcc_set_rtc_clock_source(rcc_rtc_clock_source_t rcc_clock_source)
+{
+    RCC->BDCR &= ~(RCC_BDCR_RTCSEL);
+    RCC->BDCR |= rcc_clock_source << RCC_BDCR_RTCSEL_Pos;
+}
+
 uint32_t g_msi_clock_speeds[] =
     {100000, 200000, 400000, 800000,
      1000000, 2000000, 4000000, 8000000,
@@ -100,7 +106,49 @@ void rcc_enable_spi1_clock()
     RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
 }
 
+void rcc_enable_lsi1_clock()
+{
+    RCC->CSR |= RCC_CSR_LSI1ON;
+    while (!(RCC->CSR & RCC_CSR_LSI1RDY));
+}
+
+void rcc_disable_lsi1_clock()
+{
+    RCC->CSR &= ~RCC_CSR_LSI1ON;
+}
+
+void rcc_enable_lsi2_clock()
+{
+    RCC->CSR |= RCC_CSR_LSI2ON;
+    while (!(RCC->CSR & RCC_CSR_LSI2RDY));
+}
+
+void rcc_disable_lsi2_clock()
+{
+    RCC->CSR &= ~RCC_CSR_LSI2ON;
+}
+
+void rcc_enable_rtc_clock()
+{
+    RCC->BDCR |= RCC_BDCR_RTCEN;
+}
+
+void rcc_disable_rtc_clock()
+{
+    RCC->BDCR &= ~RCC_BDCR_RTCEN;
+}
+
 void rcc_disable_interrupts()
 {
     RCC->CIER = 0x00000000;
+}
+
+void rcc_backup_domain_reset()
+{
+    RCC->BDCR |= RCC_BDCR_BDRST;
+}
+
+void rcc_backup_domain_reset_clear()
+{
+    RCC->BDCR &= ~RCC_BDCR_BDRST;
 }

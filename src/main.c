@@ -14,6 +14,7 @@
 #include <rcc.h>
 #include <task_manager.h>
 #include <sdcard.h>
+#include <rtc.h>
 
 extern uint32_t _bootloader_magic[];
 extern uint32_t _sidata[];
@@ -61,10 +62,12 @@ void main()
     sdcard_init();
     event_handler_init();
 
+    rtc_init();
+
     terminal.width = 18;
     terminal.height = 10;
     terminal_init(terminal);
-
+    
     task_manager_init();
     task_manager_start();
 }

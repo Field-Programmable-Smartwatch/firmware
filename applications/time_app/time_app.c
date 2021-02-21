@@ -1,4 +1,5 @@
 #include <stm32wb55xx.h>
+#include <time_app.h>
 #include <time.h>
 #include <event_handler.h>
 #include <stdint.h>
@@ -6,52 +7,20 @@
 #include <display.h>
 #include <terminal.h>
 #include <debug.h>
-#include <systick_timer.h>
 #include <menu.h>
 #include <task_manager.h>
 #include <string.h>
+#include <rtc.h>
 
-char week_day[16] = "Monday";
-char month[16] = "January";
-uint8_t day = 1;
-uint8_t hours = 0;
-uint8_t minutes = 0;
-uint8_t seconds = 0;
+char *weekdays[] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+char *months[] = {"January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November", "December"};
 
-uint32_t seconds_tick = 0;
-
-void draw_time()
+void draw_time(datetime_t *datetime)
 {
-    terminal_print_at(6, 3, "%s", week_day);
-    terminal_print_at(5, 4, "%s %u", month, day);
-    terminal_print_at(5, 5, "%02u:%02u.%02u", hours, minutes, seconds);
-}
-
-bool update_time()
-{
-    bool time_changed = false;
-    uint32_t current_tick = systick_timer_get_tick_count();
-    if (current_tick - seconds_tick > 1000) {
-        seconds_tick = current_tick;
-        time_changed = true;
-        seconds++;
-    }
-
-    if (seconds >= 60) {
-        seconds = 0;
-        minutes++;
-    }
-
-    if (minutes >= 60) {
-        minutes = 0;
-        hours++;
-    }
-
-    if (hours >= 25) {
-        hours = 0;
-        day++;
-    }
-    return time_changed;
+    terminal_print_at(6, 3, "%s", weekdays[datetime->weekday]);
+    terminal_print_at(5, 4, "%s %u", months[datetime->month], datetime->day);
+    terminal_print_at(5, 5, "%02u:%02u.%02u", datetime->hours, datetime->minutes, datetime->seconds);
 }
 
 void change_time()
@@ -60,12 +29,14 @@ void change_time()
     uint8_t select_button_count = 0;
     event_queue_t event_queue;
     bool time_changed;
+    datetime_t datetime;
 
+    rtc_get_date_and_time(&datetime);
     display_clear();
-    draw_time();
+    draw_time(&datetime);
     terminal_print_at(0, 0, "Changing hours");
     display_render();
-    
+
     while (task->status == TASK_STATUS_RUNNING) {
         asm("wfi");
         time_changed = false;
@@ -76,28 +47,29 @@ void change_time()
                 time_changed = true;
                 if (event.id == ID_BUTTON_UP) {
                     if (select_button_count == 0) {
-                        if (hours == 24) {
-                            hours = 0;
+                        if (datetime.hours == 24) {
+                            datetime.hours = 0;
                         } else {
-                            hours++;
+                            datetime.hours++;
                         }
                     } else if (select_button_count == 1) {
-                        if (minutes == 59) {
-                            minutes = 0;
+                        if (datetime.minutes == 59) {
+                            datetime.minutes = 0;
                         } else {
-                            minutes++;
+                            datetime.minutes++;
                         }
                     } else if (select_button_count == 2) {
-                        if (seconds == 59) {
-                            seconds = 0;
+                        if (datetime.seconds == 59) {
+                            datetime.seconds = 0;
                         } else {
-                            seconds++;
+                            datetime.seconds++;
                         }
                     }
                 }
 
                 if (event.id == ID_BUTTON_SELECT) {
                     if (select_button_count == 2) {
+                        rtc_set_date_and_time(&datetime);
                         task->status = TASK_STATUS_STOP;
                         task_manager_start_task_by_name("Time");
                     }
@@ -106,22 +78,22 @@ void change_time()
 
                 if (event.id == ID_BUTTON_DOWN) {
                     if (select_button_count == 0) {
-                        if (hours == 0) {
-                            hours = 24;
+                        if (datetime.hours == 0) {
+                            datetime.hours = 24;
                         } else {
-                            hours--;
+                            datetime.hours--;
                         }
                     } else if (select_button_count == 1) {
-                        if (minutes == 0) {
-                            minutes = 59;
+                        if (datetime.minutes == 0) {
+                            datetime.minutes = 59;
                         } else {
-                            minutes--;
+                            datetime.minutes--;
                         }
                     } else if (select_button_count == 2) {
-                        if (seconds == 0) {
-                            seconds = 59;
+                        if (datetime.seconds == 0) {
+                            datetime.seconds = 59;
                         } else {
-                            seconds--;
+                            datetime.seconds--;
                         }
                     }
                 }
@@ -129,7 +101,7 @@ void change_time()
         }
 
         if (time_changed) {
-            draw_time();
+            draw_time(&datetime);
             if (select_button_count == 0) {
                 terminal_print_at(0, 0, "Changing hours");
             }
@@ -148,13 +120,13 @@ void time_application_start()
 {
     task_t *task = task_manager_get_task_by_name("Time");
     event_queue_t event_queue;
+    datetime_t datetime;
+    rtc_get_date_and_time(&datetime);
     display_clear();
-    draw_time();
+    draw_time(&datetime);
     display_render();
-    seconds_tick = systick_timer_get_tick_count();
     while (task->status == TASK_STATUS_RUNNING) {
         asm("wfi");
-        bool time_changed = update_time();
         event_queue = event_handler_poll();
         for (uint8_t i = 0; i < event_queue.length; i++) {
             event_t event = event_queue.events[i];
@@ -175,10 +147,9 @@ void time_application_start()
                 }
             }
         }
-        if (time_changed) {
-            draw_time();
-            display_render();
-        }
+        rtc_get_date_and_time(&datetime);
+        draw_time(&datetime);
+        display_render();
     }
     
 }
