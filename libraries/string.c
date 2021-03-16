@@ -17,6 +17,27 @@ void *memcpy(void *dest, void *src, uint32_t size)
     return dest;
 }
 
+int32_t memcmp(const void* mem1, const void *mem2, uint32_t size)
+{
+    const uint8_t *m1 = mem1;
+    const uint8_t *m2 = mem2;
+
+    for (uint32_t i = 0; i < size;i++) {
+        if (m1[i] < m2[i]) {
+            return -1;
+        }
+
+        if (m1[i] > m2[i]) {
+            return 1;
+        }
+
+        if (m1[i] == 0) {
+            break;
+        }
+    }
+    return 0;
+}
+
 void *memset(void *dest, uint8_t value, uint32_t size)
 {
     uint8_t *d = dest;
@@ -50,7 +71,7 @@ char *strncpy(char *dest, const char *src, uint32_t size)
 
 int32_t strncmp(const char* str1, const char *str2, uint32_t size)
 {
-    for (uint32_t i = 0;;i++) {
+    for (uint32_t i = 0; i < size;i++) {
         if (str1[i] < str2[i]) {
             return -1;
         }

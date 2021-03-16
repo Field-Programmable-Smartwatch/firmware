@@ -42,11 +42,8 @@ uint32_t systick_timer_get_tick_count()
 
 void systick_timer_wait_ms(uint32_t ms)
 {
-    systick_timer_start();
-    uint32_t end_tick = tick_count + ms;
-    while(tick_count != end_tick);
-    systick_timer_stop();
     tick_count = 0;
+    while(tick_count < ms);
 }
 
 void SysTick_Handler()

@@ -15,6 +15,7 @@
 #include <task_manager.h>
 #include <sdcard.h>
 #include <rtc.h>
+#include <bluefruit.h>
 
 extern uint32_t _bootloader_magic[];
 extern uint32_t _sidata[];
@@ -60,6 +61,7 @@ void main()
     
     display_init();
     sdcard_init();
+    bluefruit_init();
     event_handler_init();
 
     rtc_init();
