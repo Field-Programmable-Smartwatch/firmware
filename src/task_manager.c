@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time_app.h>
 #include <menu.h>
+#include <ATtui.h>
 #include <display.h>
 #include <terminal.h>
 #include <debug.h>
@@ -76,6 +77,7 @@ void task_manager_init()
     task_manager_add_task("Time", &time_application_start);
     task_manager_add_task("Set Time", &change_time);
     task_manager_add_task("Bootloader", &bootloader_reboot);
+    task_manager_add_task("ATtui", &ATtui_application_start);
     // TODO: look for additional tasks to add in flash memory
 
     task_manager_start_task_by_name("Time");

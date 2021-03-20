@@ -53,6 +53,7 @@ bootloader.elf: $(BOOTLOADER_OBJECTS) bootloader-linker.ld
 .PHONY: dd
 dd:
 	sudo dd if=fpsw.elf of=$(DEV) bs=512
+	sudo rm $(DEV) # It seems I have to do this due to some linux bug
 
 .PHONY: flash-%
 flash-%:

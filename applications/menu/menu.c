@@ -8,7 +8,7 @@
 #include <time.h>
 #include <task_manager.h>
 
-#define MENU_ITEM_MAX 3
+#define MENU_ITEM_MAX 4
 
 uint32_t g_menu_selection = 0;
 menu_item_t g_menu_items[MENU_ITEM_MAX];

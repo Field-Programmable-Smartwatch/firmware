@@ -24,7 +24,8 @@ typedef struct lpuart_configuration {
     lpuart_stop_bits_t stop_bits;
 } lpuart_configuration_t;
 
-void lpuart_read(int32_t lpuart_handle, void *buffer, uint32_t length);
+bool lpuart_rx_empty();
+uint8_t lpuart_read(int32_t lpuart_handle);
 void lpuart_write(int32_t lpuart_handle, void *data, uint32_t length);
 int32_t lpuart_open(lpuart_configuration_t config);
 void lpuart_close(int32_t lpuart_handle);

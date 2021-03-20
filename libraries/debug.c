@@ -11,6 +11,7 @@ int32_t g_lpuart_handle = -1;
 void debug_init()
 {
     gpio_configuration_t tx_pin_config;
+    gpio_configuration_t rx_pin_config;
     lpuart_configuration_t lpuart_config;
 
     rcc_enable_gpioa_clock();
@@ -23,6 +24,15 @@ void debug_init()
     tx_pin_config.pull_resistor = GPIO_PULL_RESISTOR_NONE;
     tx_pin_config.alternative_function = 8;
     gpio_configure_pin(tx_pin_config);
+
+    rx_pin_config.port = GPIOA;
+    rx_pin_config.pin = 3;
+    rx_pin_config.mode = GPIO_MODE_ALT_FUNC;
+    rx_pin_config.output_type = GPIO_OUTPUT_TYPE_PUSH_PULL;
+    rx_pin_config.output_speed = GPIO_OUTPUT_SPEED_FAST;
+    rx_pin_config.pull_resistor = GPIO_PULL_RESISTOR_NONE;
+    rx_pin_config.alternative_function = 8;
+    gpio_configure_pin(rx_pin_config);
 
     lpuart_config.clock_source = RCC_LPUART_CLOCK_SOURCE_SYSCLK;
     lpuart_config.word_length = LPUART_WORD_LENGTH_8;
@@ -43,4 +53,11 @@ void debug_print(char *format, ...)
 
     msg_length = strlen(msg);
     lpuart_write(g_lpuart_handle, msg, msg_length);
+}
+
+
+uint8_t debug_wait_for_input()
+{
+    while (lpuart_rx_empty());
+    return lpuart_read(g_lpuart_handle);
 }

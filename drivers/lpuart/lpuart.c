@@ -53,14 +53,32 @@ static int32_t lpuart_find_free_device()
     return -1;
 }
 
-void lpuart_read(int32_t lpuart_handle, void *buffer, uint32_t length)
+bool lpuart_rx_empty()
 {
-    // TODO
-    return;
+    return !(LPUART1->ISR & USART_ISR_RXNE);
+}
+
+uint8_t lpuart_read(int32_t lpuart_handle)
+{
+    if (lpuart_handle >= LPUART_DEVICE_MAX ||
+        lpuart_handle < 0 ||
+        !g_lpuart_devices[lpuart_handle].is_open) {
+        return 0;
+    }
+    
+    if (g_current_lpuart_config != lpuart_handle) {
+        lpuart_configure(lpuart_handle);
+    }
+
+    return LPUART1->RDR;
 }
 
 void lpuart_write(int32_t lpuart_handle, void *data, uint32_t length)
 {
+    if (!data) {
+        return;
+    }
+    
     if (lpuart_handle >= LPUART_DEVICE_MAX ||
         lpuart_handle < 0 ||
         !g_lpuart_devices[lpuart_handle].is_open) {
