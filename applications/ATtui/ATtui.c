@@ -4,6 +4,7 @@
 #include <bluefruit.h>
 #include <string.h>
 #include <sdep.h>
+#include <systick_timer.h>
 
 #define ATtui_COMMAND_MAX 128
 #define ATtui_RESPONSE_MAX 256
@@ -14,6 +15,7 @@ static int32_t ATtui_send_uart(uint8_t *message, uint32_t size)
     for (uint8_t i = 0; i < size; i++) {
         command[13] = message[i];
         bluefruit_write(command, 14);
+        systick_timer_wait_ms(50);
     }
     return 0;
 }
