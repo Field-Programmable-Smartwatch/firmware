@@ -45,6 +45,7 @@ void main()
         jump_to_bootloader();
     }
 
+    error_t error;
     terminal_configuration_t terminal;
 
     __enable_irq();
@@ -53,18 +54,37 @@ void main()
 
     lpuart_init();
     debug_init();
+    debug_print("In main\r\n");
     
-    spi_init();
-
+    error = spi_init();
+    if (error) {
+        debug_print("Failed to initialize spi\r\n");
+    }
+    
     systick_timer_init();
     systick_timer_start();
     
-    display_init();
-    sdcard_init();
-    bluefruit_init();
+    error = display_init();
+    if (error) {
+        debug_print("Failed to initialize display\r\n");
+    }
+    
+    error = sdcard_init();
+    if (error) {
+        debug_print("Failed to initialize sdcard\r\n");
+    }
+    
+    error = bluefruit_init();
+    if (error) {
+        debug_print("Failed to initialize bluefruit\r\n");
+    }
+    
     event_handler_init();
 
-    rtc_init();
+    error = rtc_init();
+    if (error) {
+        debug_print("Failed to initialize rtc\r\n");
+    }
 
     terminal.width = 18;
     terminal.height = 10;

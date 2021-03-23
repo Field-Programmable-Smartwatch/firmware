@@ -9,6 +9,7 @@
 #include <rcc.h>
 #include <sdcard.h>
 #include <elf32.h>
+#include <error.h>
 
 #define KERNEL_START_ADDR 0x20002000
 #define KERNEL_SIZE_IN_BLOCKS 35
@@ -70,14 +71,22 @@ void bootloader_main()
         jump_to_kernel_main();
     }
 
+    error_t error;
+    
     __enable_irq();
 
     lpuart_init();
-    spi_init();
-    
     debug_init();
-    sdcard_init();
-    //load_kernel();
+
+    error = spi_init();
+    if (error) {
+        debug_print("BOOTLOADER: Failed to initialize spi\r\n");
+    }
+    
+    error = sdcard_init();
+    if (error) {
+        debug_print("BOOTLOADER: Failed to initialize sdcard\r\n");
+    }
     elf_load();
     jump_to_kernel_main();
 }

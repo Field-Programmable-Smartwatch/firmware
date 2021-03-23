@@ -39,7 +39,7 @@ static void event_handler_add_event_source(uint32_t id, GPIO_TypeDef *gpio_port,
     event_source->id = id;
     event_source->gpio_port = gpio_port;
     event_source->gpio_pin = gpio_pin;
-    event_source->input_value = gpio_read(gpio_port, gpio_pin);
+    gpio_read(gpio_port, gpio_pin, &event_source->input_value);
 }
 
 void event_handler_init()
@@ -78,7 +78,9 @@ void event_handler_init()
 
 static uint8_t event_source_read_input(event_source_t *event_source)
 {
-    return gpio_read(event_source->gpio_port, event_source->gpio_pin);
+    uint8_t pin_value;
+    gpio_read(event_source->gpio_port, event_source->gpio_pin, &pin_value);
+    return pin_value;
 }
 
 static void event_queue_add_event(event_queue_t *event_queue, event_t event)

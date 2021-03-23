@@ -3,9 +3,10 @@
 
 #include <stdint.h>
 #include <time.h>
+#include <error.h>
 
-void rtc_set_date_and_time(datetime_t *datetime);
-void rtc_get_date_and_time(datetime_t *datetime);
-void rtc_init();
+error_t rtc_set_date_and_time(datetime_t *datetime);
+error_t rtc_get_date_and_time(datetime_t *datetime);
+error_t rtc_init();
 
 #endif

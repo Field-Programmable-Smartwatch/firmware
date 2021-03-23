@@ -3,9 +3,14 @@
 #include <time.h>
 #include <rcc.h>
 #include <debug.h>
+#include <error.h>
 
-void rtc_set_date_and_time(datetime_t *datetime)
+error_t rtc_set_date_and_time(datetime_t *datetime)
 {
+    if (!datetime) {
+        return ERROR_INVALID;
+    }
+    
     // Disable backup domain write protection
     PWR->CR1 |= PWR_CR1_DBP;
 
@@ -62,10 +67,15 @@ void rtc_set_date_and_time(datetime_t *datetime)
 
     // Enable backup domain write protection
     PWR->CR1 &= ~PWR_CR1_DBP;
+
+    return SUCCESS;
 }
 
-void rtc_get_date_and_time(datetime_t *datetime)
+error_t rtc_get_date_and_time(datetime_t *datetime)
 {
+    if (!datetime) {
+        return ERROR_INVALID;
+    }
     datetime->year = (((RTC->DR & RTC_DR_YT) >> RTC_DR_YT_Pos) * 10) + ((RTC->DR & RTC_DR_YU) >> RTC_DR_YU_Pos);
     datetime->month = (((RTC->DR & RTC_DR_MT) >> RTC_DR_MT_Pos) * 10) + ((RTC->DR & RTC_DR_MU) >> RTC_DR_MU_Pos);
     datetime->day = (((RTC->DR & RTC_DR_DT) >> RTC_DR_DT_Pos) * 10) + ((RTC->DR & RTC_DR_DU) >> RTC_DR_DU_Pos);
@@ -75,9 +85,11 @@ void rtc_get_date_and_time(datetime_t *datetime)
     datetime->minutes = (((RTC->TR & RTC_TR_MNT) >> RTC_TR_MNT_Pos) * 10) +
                         ((RTC->TR & RTC_TR_MNU) >> RTC_TR_MNU_Pos);
     datetime->seconds = (((RTC->TR & RTC_TR_ST) >> RTC_TR_ST_Pos) * 10) + ((RTC->TR & RTC_TR_SU) >> RTC_TR_SU_Pos);
+
+    return SUCCESS;
 }
 
-void rtc_init()
+error_t rtc_init()
 {
     datetime_t datetime;
     
@@ -100,5 +112,5 @@ void rtc_init()
     datetime.minutes = 0;
     datetime.seconds = 0;
 
-    rtc_set_date_and_time(&datetime);
+    return rtc_set_date_and_time(&datetime);
 }

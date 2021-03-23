@@ -2,9 +2,10 @@
 #define SDCARD_H
 
 #include <stdint.h>
+#include <error.h>
 
-void sdcard_read_block(uint32_t addr, void *buffer);
-void sdcard_write_block(uint32_t addr, void *buffer);
-void sdcard_init();
+error_t sdcard_read_block(uint32_t addr, void *buffer);
+error_t sdcard_write_block(uint32_t addr, void *buffer);
+error_t sdcard_init();
 
 #endif

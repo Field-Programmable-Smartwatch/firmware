@@ -3,6 +3,7 @@
 
 #include <stm32wb55xx.h>
 #include <stdbool.h>
+#include <error.h>
 
 typedef enum spi_clock_mode {
     SPI_CLOCK_MODE_0,
@@ -65,11 +66,13 @@ typedef struct spi_configuration {
     spi_data_size_t data_size;
 } spi_configuration_t;
 
-void spi_read_write(int32_t spi_handle, void *rdata, uint8_t wdata, uint32_t length);
-void spi_read(int32_t spi_handle, void *buffer, uint32_t length);
-void spi_write(int32_t spi_handle, void *data, uint32_t length);
-int32_t spi_open(spi_configuration_t config);
-void spi_close(int32_t spi_handle);
-void spi_init();
+typedef uint32_t spi_handle_t;
+
+error_t spi_read_write(int32_t spi_handle, void *rdata, uint8_t wdata, uint32_t length);
+error_t spi_read(int32_t spi_handle, void *buffer, uint32_t length);
+error_t spi_write(int32_t spi_handle, void *data, uint32_t length);
+error_t spi_open(spi_configuration_t config, spi_handle_t *spi_handle);
+error_t spi_close(int32_t spi_handle);
+error_t spi_init();
 void spi_destroy();
 #endif

@@ -2,6 +2,7 @@
 #define GPIO_H
 
 #include <stdint.h>
+#include <error.h>
 
 typedef enum gpio_mode{
     GPIO_MODE_INPUT,
@@ -39,16 +40,16 @@ typedef struct gpio_configuration {
     uint8_t alternative_function;
 } gpio_configuration_t;
 
-void gpio_set_mode(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_mode_t mode);
-void gpio_set_output_type(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_output_type_t output_type);
-void gpio_set_output_speed(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_output_speed_t output_speed);
-void gpio_set_pull_resistor(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_pull_resistor_t pull_resistor);
-void gpio_set_alternative_function(GPIO_TypeDef *gpio_port, uint8_t pin, uint8_t alternative_function);
+error_t gpio_set_mode(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_mode_t mode);
+error_t gpio_set_output_type(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_output_type_t output_type);
+error_t gpio_set_output_speed(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_output_speed_t output_speed);
+error_t gpio_set_pull_resistor(GPIO_TypeDef *gpio_port, uint8_t pin, gpio_pull_resistor_t pull_resistor);
+error_t gpio_set_alternative_function(GPIO_TypeDef *gpio_port, uint8_t pin, uint8_t alternative_function);
 
-void gpio_configure_pin(gpio_configuration_t config);
+error_t gpio_read(GPIO_TypeDef *gpio_port, uint8_t pin, uint8_t *value);
 
-uint8_t gpio_read(GPIO_TypeDef *gpio_port, uint8_t pin);
+error_t gpio_write(GPIO_TypeDef *gpio_port, uint8_t pin, uint8_t value);
 
-void gpio_write(GPIO_TypeDef *gpio_port, uint8_t pin, uint8_t value);
+error_t gpio_configure_pin(gpio_configuration_t config);
 
 #endif

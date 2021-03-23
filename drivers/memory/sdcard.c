@@ -7,35 +7,48 @@
 #include <rcc.h>
 #include <string.h>
 #include <systick_timer.h>
+#include <error.h>
 
-static int32_t g_spi_handle = -1;
+static spi_handle_t g_spi_handle;
 
-static inline void sdcard_select()
+static inline error_t sdcard_select()
 {
-    gpio_write(GPIOB, 6, 0);
+    return gpio_write(GPIOB, 6, 0);
 }
 
-static inline void sdcard_deselect()
+static inline error_t sdcard_deselect()
 {
-    gpio_write(GPIOB, 6, 1);
+    return gpio_write(GPIOB, 6, 1);
 }
 
-static void sdcard_get_response(void *response, uint32_t length)
+static error_t sdcard_get_response(void *response, uint32_t length)
 {
-    spi_read_write(g_spi_handle, response, 0xff, length);
+    return spi_read_write(g_spi_handle, response, 0xff, length);
 }
 
-static void sdcard_wait_till_ready()
+static error_t sdcard_wait_till_ready()
 {
+    uint8_t timeout = 0;
     uint8_t resp = 0;
-    while (resp != 0xff) {
-        sdcard_get_response(&resp, 1);
+    while (resp != 0xff && timeout < 50) {
+        error_t error = sdcard_get_response(&resp, 1);
+        if (error) {
+            return error;
+        }
+        timeout++;
     }
+
+    if (timeout == 50) {
+        return ERROR_TIMEOUT;
+    }
+
+    return SUCCESS;
 }
 
-static uint8_t sdcard_send_command(uint8_t cmd, uint32_t arg)
+static error_t sdcard_send_command(uint8_t cmd, uint32_t arg, uint8_t *response)
 {
-    sdcard_wait_till_ready();
+    error_t error;
+    uint8_t packet[6];
     uint8_t msg[] = {
         cmd | 0x40,
         (uint8_t)(arg >> 24),
@@ -43,47 +56,86 @@ static uint8_t sdcard_send_command(uint8_t cmd, uint32_t arg)
         (uint8_t)(arg >> 8),
         (uint8_t)(arg)
     };
-
     uint8_t crc = crc7_calculate(msg, 5) + 1;
-    spi_write(g_spi_handle, msg, 5);
-    spi_write(g_spi_handle, &crc, 1);
 
-    uint8_t ret = 0xff;
-    uint8_t count = 10;
-    while ((ret & 0x80) && count) {
-        sdcard_get_response(&ret, 1);
-        count--;
+    memcpy(packet, msg, 5);
+    memcpy(&packet[5], &crc, 1);
+    
+    error = sdcard_wait_till_ready();
+    if (error) {
+        return error;
     }
-    return ret;
+
+    error = spi_write(g_spi_handle, packet, 6);
+    if (error) {
+        return error;
+    }
+
+    uint8_t count = 10;
+    do {
+        error_t error = sdcard_get_response(response, 1);
+        if (error) {
+            return error;
+        }
+        count--;
+    } while ((*response & 0x80) && count);
+
+    if (!count) {
+        return ERROR_TIMEOUT;
+    }
+    return SUCCESS;
 }
 
-void sdcard_read_block(uint32_t addr, void *buffer)
+error_t sdcard_read_block(uint32_t addr, void *buffer)
 {
-    sdcard_select();
+    error_t error;
+    uint8_t response;
     uint8_t *data = buffer;
     uint16_t crc;
-    while (sdcard_send_command(17, addr)) {
-        debug_print("Failed to read block\r\n");
-    }
+
+    sdcard_select();
+
+    do {
+        error_t error = sdcard_send_command(17, addr, &response);
+        if (error) {
+            goto exit;
+        }
+    } while (response);
     
     // Wait for data block
     uint8_t temp = 0xff;
     while (temp == 0xff) {
-        spi_read_write(g_spi_handle, &temp, 0xff, 1);
+        error = spi_read_write(g_spi_handle, &temp, 0xff, 1);
+        if (error) {
+            goto exit;
+        }
     }
 
     // Get data block
-    sdcard_get_response(data, 512);
-    sdcard_get_response(&crc, 2);
+    error = sdcard_get_response(data, 512);
+    if (error) {
+        goto exit;
+    }
+
+    error = sdcard_get_response(&crc, 2);
+    
+ exit:
     sdcard_deselect();
+    return error;
 }
 
-void sdcard_write_block(uint32_t addr, void *buffer)
+error_t sdcard_write_block(uint32_t addr, void *buffer)
 {
+    error_t error;
+    uint8_t response;
+    
     sdcard_select();
-    while (sdcard_send_command(24, addr)) {
-        debug_print("Failed to write block\r\n");
-    }
+    do {
+        error = sdcard_send_command(24, addr, &response);
+        if (error) {
+            goto exit;
+        }
+    } while (response);
     
     uint8_t msg[515];
     uint8_t data_start_token = 0xfe;
@@ -94,24 +146,34 @@ void sdcard_write_block(uint32_t addr, void *buffer)
     memcpy(&msg[1], buffer, 512);
     memcpy(&msg[513], &crc, 2);
 
-    spi_write(g_spi_handle, msg, 515);
+    error = spi_write(g_spi_handle, msg, 515);
+    if (error) {
+        goto exit;
+    }
 
     while ((resp & 0x1f) != 0x5) {
         debug_print("Failed to get block write response %u\r\n", resp);
-        sdcard_get_response(&resp, 1);
+        error = sdcard_get_response(&resp, 1);
+        if (error) {
+            goto exit;
+        }
     }
 
-    if (sdcard_send_command(13, 0)) {
+    error = sdcard_send_command(13, 0, &response);
+    if (error) {
         debug_print("failed to get r2 resp\r\n");
-        sdcard_deselect();
-        return;
+        goto exit;
     }
-    sdcard_get_response(&resp, 1);
+    error = sdcard_get_response(&resp, 1);
+
+ exit:
     sdcard_deselect();
+    return error;
 }
 
-void sdcard_init()
+error_t sdcard_init()
 {
+    error_t error;
     gpio_configuration_t cs_pin;
     spi_configuration_t spi1;
 
@@ -125,8 +187,15 @@ void sdcard_init()
     cs_pin.output_type = GPIO_OUTPUT_TYPE_PUSH_PULL;
     cs_pin.output_speed = GPIO_OUTPUT_SPEED_LOW;
     cs_pin.pull_resistor = GPIO_PULL_RESISTOR_NONE;
-    gpio_configure_pin(cs_pin);
-    gpio_write(cs_pin.port, cs_pin.pin, 1);
+    error = gpio_configure_pin(cs_pin);
+    if (error) {
+        return error;
+    }
+
+    error = gpio_write(cs_pin.port, cs_pin.pin, 1);
+    if (error) {
+        return error;
+    }
 
     // Configure SPI interface
     spi1.clock_mode = SPI_CLOCK_MODE_0;
@@ -135,30 +204,65 @@ void sdcard_init()
     spi1.significant_bit = SPI_SIGNIFICANT_BIT_MSB;
     spi1.com_mode =  SPI_COM_MODE_FULL_DUPLEX;
     spi1.data_size = SPI_DATA_SIZE_8BIT;
-    g_spi_handle = spi_open(spi1);
+    error = spi_open(spi1, &g_spi_handle);
+    if (error) {
+        return error;
+    }
 
     for (uint32_t i = 0; i < 100; i++) {
         uint8_t msg = 0xff;
-        spi_write(g_spi_handle, &msg, 1);
+        error = spi_write(g_spi_handle, &msg, 1);
+        if (error) {
+            return error;
+        }
     }
 
     sdcard_select();
-    uint8_t test = 0;
-    while ((test = sdcard_send_command(0, 0)) != 0x01) {
-        debug_print("sdcard_init: retrying GO_IDLE_STATE cmd %u\r\n", test);
-    }
-    
-    if (sdcard_send_command(8, 0x1AA) & 0x4) {
-        debug_print("sdcard_init: retrying SEND_IF_COND cmd\r\n");
-        return;
-    }
-    
-    uint8_t status = 1;
-    while (status != 0) {
-        debug_print("sdcard_init: retrying SD_SEND_OP_COND cmd\r\n");
-        sdcard_send_command(55, 0);
-        status = sdcard_send_command(41, 0x40000000);
+
+    uint8_t timeout = 100;
+    uint8_t response;
+    do {
+        error = sdcard_send_command(0, 0, &response);
+        if (error) {
+            goto exit;
+        }
+        timeout--;
+    } while (response != 0x01 && timeout);
+
+    // Check if command timed out
+    if (timeout == 0) {
+        error = ERROR_TIMEOUT;
+        goto exit;
     }
 
+    error = sdcard_send_command(8, 0x1AA, &response);
+    if (error) {
+        goto exit;
+    }
+    if (response & 0x4) {
+        error = ERROR_IO;
+        goto exit;
+    }
+
+    timeout = 100;
+    do {
+        error = sdcard_send_command(55, 0, &response); // TODO: Check response value here?
+        if (error) {
+            goto exit;
+        }
+        
+        error = sdcard_send_command(41, 0x40000000, &response);
+        if (error) {
+            goto exit;
+        }
+
+        timeout--;
+    } while (response != 0 && timeout);
+
+    if (timeout == 0) {
+        error = ERROR_TIMEOUT;
+    }
+ exit:
     sdcard_deselect();
+    return error;
 }

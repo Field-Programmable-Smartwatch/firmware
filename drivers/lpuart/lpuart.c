@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <rcc.h>
+#include <error.h>
 
 #define LPUART_DEVICE_MAX 8
 
@@ -16,12 +17,12 @@ static void lpuart_send_byte(uint8_t data)
     while (!(LPUART1->ISR & USART_ISR_TC)) {}
 }
 
-static void lpuart_configure(int32_t lpuart_handle)
+static error_t lpuart_configure(int32_t lpuart_handle)
 {
     if (lpuart_handle < 0 ||
         lpuart_handle >= LPUART_DEVICE_MAX ||
         !g_lpuart_devices[lpuart_handle].is_open) {
-        return;
+        return ERROR_INVALID;
     }
 
     lpuart_configuration_t *lpuart_dev = &g_lpuart_devices[lpuart_handle];
@@ -30,6 +31,8 @@ static void lpuart_configure(int32_t lpuart_handle)
     rcc_set_lpuart1_clock_source(lpuart_dev->clock_source);
     LPUART1->CR1 |= lpuart_dev->word_length << USART_CR1_M1_Pos;
     LPUART1->BRR = lpuart_dev->baud_rate_prescaler;
+
+    return SUCCESS;
 }
 
 static int32_t lpuart_find_free_device()

@@ -6,18 +6,19 @@
 #include <debug.h>
 #include <gpio.h>
 #include <string.h>
+#include <error.h>
 
 #define SPI_DEVICE_MAX 8
 
 spi_configuration_t g_spi_devices[SPI_DEVICE_MAX];
 int32_t g_current_spi_config = -1;
 
-static void spi_configure(int32_t spi_handle)
+static error_t spi_configure(int32_t spi_handle)
 {
     if (spi_handle < 0 ||
         spi_handle >= SPI_DEVICE_MAX ||
         !g_spi_devices[spi_handle].is_open) {
-        return;
+        return ERROR_INVALID;
     }
 
     spi_configuration_t *spi_dev = &g_spi_devices[spi_handle];
@@ -54,6 +55,8 @@ static void spi_configure(int32_t spi_handle)
     SPI1->CR2 = cr2_value;
 
     SPI1->CR1 |= SPI_CR1_SPE;
+
+    return SUCCESS;
 }
 
 static bool spi_tx_buffer_empty()
@@ -61,10 +64,10 @@ static bool spi_tx_buffer_empty()
     return (bool)(SPI1->SR & 2);
 }
 
-static bool spi_rx_buffer_empty()
-{
-    return (bool)!(SPI1->SR & 1);
-}
+/* static bool spi_rx_buffer_empty() */
+/* { */
+/*     return (bool)!(SPI1->SR & 1); */
+/* } */
 
 static void spi_transmit_8bit(uint8_t data)
 {
@@ -74,9 +77,6 @@ static void spi_transmit_8bit(uint8_t data)
 
 static void spi_receive_8bit(uint8_t *data)
 {
-    if (spi_rx_buffer_empty()) {
-        debug_print("empty\r\n");
-    }
     *data = SPI1->DR;   
 }
 
@@ -101,12 +101,12 @@ static int32_t spi_find_free_device()
     return -1;
 }
 
-void spi_read_write(int32_t spi_handle, void *rdata, uint8_t wdata, uint32_t length)
+error_t spi_read_write(int32_t spi_handle, void *rdata, uint8_t wdata, uint32_t length)
 {
     if (spi_handle < 0 ||
         spi_handle >= SPI_DEVICE_MAX ||
         !g_spi_devices[spi_handle].is_open) {
-        return;
+        return ERROR_INVALID;
     }
 
     if (g_current_spi_config != spi_handle) {
@@ -118,14 +118,16 @@ void spi_read_write(int32_t spi_handle, void *rdata, uint8_t wdata, uint32_t len
         spi_transmit_8bit(wdata);
         spi_receive_8bit(rd++);
     }
+
+    return SUCCESS;
 }
 
-void spi_read(int32_t spi_handle, void *buffer, uint32_t length)
+error_t spi_read(int32_t spi_handle, void *buffer, uint32_t length)
 {
     if (spi_handle < 0 ||
         spi_handle >= SPI_DEVICE_MAX ||
         !g_spi_devices[spi_handle].is_open) {
-        return;
+        return ERROR_INVALID;
     }
 
     if (g_current_spi_config != spi_handle) {
@@ -137,15 +139,15 @@ void spi_read(int32_t spi_handle, void *buffer, uint32_t length)
         spi_receive_8bit(d++);
     }
     
-    return;
+    return SUCCESS;
 }
 
-void spi_write(int32_t spi_handle, void *data, uint32_t length)
+error_t spi_write(int32_t spi_handle, void *data, uint32_t length)
 {
     if (spi_handle < 0 ||
         spi_handle >= SPI_DEVICE_MAX ||
         !g_spi_devices[spi_handle].is_open) {
-        return;
+        return ERROR_INVALID;
     }
 
     if (g_current_spi_config != spi_handle) {
@@ -156,33 +158,40 @@ void spi_write(int32_t spi_handle, void *data, uint32_t length)
     while (length--) {
         spi_transmit_8bit(*d++);
     }
+
+    return SUCCESS;
 }
 
-int32_t spi_open(spi_configuration_t config)
+error_t spi_open(spi_configuration_t config, spi_handle_t *spi_handle)
 {
-    int32_t spi_handle = spi_find_free_device();
-    if (spi_handle < 0) {
-        return -1;
+    int32_t handle = spi_find_free_device();
+    if (handle < 0) {
+        return ERROR_NO_MEMORY;
     }
 
-    memcpy(&g_spi_devices[spi_handle], &config, sizeof(spi_configuration_t));
-    g_spi_devices[spi_handle].is_open = true;
-    spi_configure(spi_handle);
-    return spi_handle;
+    memcpy(&g_spi_devices[handle], &config, sizeof(spi_configuration_t));
+    g_spi_devices[handle].is_open = true;
+    spi_configure(handle);
+
+    *spi_handle = handle;
+    return SUCCESS;
 }
 
-void spi_close(int32_t spi_handle)
+error_t spi_close(int32_t spi_handle)
 {
     if (spi_handle < 0 ||
         spi_handle >= SPI_DEVICE_MAX ) {
-        return;
+        return ERROR_INVALID;
     }
 
     g_spi_devices[spi_handle].is_open = false;
+
+    return SUCCESS;
 }
 
-void spi_init()
+error_t spi_init()
 {
+    error_t error;
     gpio_configuration_t sck_pin;
     gpio_configuration_t miso_pin;
     gpio_configuration_t mosi_pin;
@@ -197,7 +206,10 @@ void spi_init()
     sck_pin.output_speed = GPIO_OUTPUT_SPEED_LOW;
     sck_pin.pull_resistor = GPIO_PULL_RESISTOR_NONE;
     sck_pin.alternative_function = 5;
-    gpio_configure_pin(sck_pin);
+    error = gpio_configure_pin(sck_pin);
+    if (error) {
+        return error;
+    }
 
     miso_pin.port = GPIOA;
     miso_pin.pin = 6;
@@ -206,7 +218,10 @@ void spi_init()
     miso_pin.output_speed = GPIO_OUTPUT_SPEED_LOW;
     miso_pin.pull_resistor = GPIO_PULL_RESISTOR_NONE;
     miso_pin.alternative_function = 5;
-    gpio_configure_pin(miso_pin);
+    error = gpio_configure_pin(miso_pin);
+    if (error) {
+        return error;
+    }
 
     mosi_pin.port = GPIOA;
     mosi_pin.pin = 7;
@@ -215,7 +230,12 @@ void spi_init()
     mosi_pin.output_speed = GPIO_OUTPUT_SPEED_LOW;
     mosi_pin.pull_resistor = GPIO_PULL_RESISTOR_NONE;
     mosi_pin.alternative_function = 5;
-    gpio_configure_pin(mosi_pin);
+    error = gpio_configure_pin(mosi_pin);
+    if (error) {
+        return error;
+    }
+
+    return SUCCESS;
 }
 
 void spi_destroy()
