@@ -2,12 +2,13 @@
 #include <rtc.h>
 #include <time.h>
 #include <rcc.h>
-#include <debug.h>
+#include <log.h>
 #include <error.h>
 
 error_t rtc_set_date_and_time(datetime_t *datetime)
 {
     if (!datetime) {
+        log_error(ERROR_INVALID, "datetime is a pointer to a NULL address");
         return ERROR_INVALID;
     }
     
@@ -74,6 +75,7 @@ error_t rtc_set_date_and_time(datetime_t *datetime)
 error_t rtc_get_date_and_time(datetime_t *datetime)
 {
     if (!datetime) {
+        log_error(ERROR_INVALID, "datetime is a pointer to a NULL address");
         return ERROR_INVALID;
     }
     datetime->year = (((RTC->DR & RTC_DR_YT) >> RTC_DR_YT_Pos) * 10) + ((RTC->DR & RTC_DR_YU) >> RTC_DR_YU_Pos);

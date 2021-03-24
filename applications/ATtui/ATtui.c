@@ -1,6 +1,6 @@
 #include <ATtui.h>
 #include <task_manager.h>
-#include <debug.h>
+#include <log.h>
 #include <bluefruit.h>
 #include <string.h>
 #include <sdep.h>
@@ -43,34 +43,36 @@ void ATtui_application_start()
     memset(command, 0, ATtui_COMMAND_MAX);
     memset(response, 0, ATtui_RESPONSE_MAX);
     
-    debug_print("> ");
+    log(LOG_LEVEL_INFO, "> ");
     while (task->status == TASK_STATUS_RUNNING) {
-        uint8_t c = debug_wait_for_input();
+        uint8_t c = log_wait_for_input();
         if (c == 8) { // Backspace key pressed
             if (command_length == 0) {
                 continue;
             }
             command[--command_length] = 0;
             // Clear character on tty
-            debug_print("\b \b");
+            log(LOG_LEVEL_INFO, "\b \b");
 
         } else if (c == '\r') { // Enter key pressed
             if (memcmp(command, "exit", 4) == 0) { // Exit command
                 task->status = TASK_STATUS_STOP;
                 task_manager_start_task_by_name("Menu");
+                break;
             } else if (memcmp(command, "send", 4) == 0) { // Send command
                 ATtui_send_uart(command+5, command_length-5);
             } else {
                 ATtui_send_command(command, command_length);
             }
             command_length = 0;
+            systick_timer_wait_ms(50);
             ATtui_get_response(response, ATtui_RESPONSE_MAX);
-            debug_print("\r\n%s\r\n> ", response);
+            log(LOG_LEVEL_INFO, "\r\n%s\r\n> ", response);
 
         } else if (command_length < ATtui_COMMAND_MAX - 1 &&
                    (c >= 32 && c <= 126)) { // Character key pressed
             command[command_length++] = c;
-            debug_print("%c", c);
+            log(LOG_LEVEL_INFO, "%c", c);
         }
     }
 }

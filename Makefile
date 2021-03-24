@@ -8,7 +8,8 @@ CPU = cortex-m4
 INCLUDE = -Iinclude -Ilibraries -Isrc -Ibootloader \
           $(foreach inc_path, $(wildcard drivers/*), -I$(inc_path)) \
           $(foreach inc_path, $(wildcard applications/*), -I$(inc_path))
-CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=$(CPU) $(INCLUDE) -MMD -MF $(DEPDIR)/$*.d
+CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=$(CPU) $(INCLUDE) \
+         -DLOG_LEVEL=LOG_LEVEL_INFO -MMD -MF $(DEPDIR)/$*.d
 LDFLAGS = --omagic -static
 
 DEPDIR = .deps/

@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <display.h>
 #include <terminal.h>
-#include <debug.h>
+#include <log.h>
 #include <menu.h>
 #include <task_manager.h>
 #include <string.h>

@@ -1,14 +1,45 @@
 #include <stm32wb55xx.h>
-#include "debug.h"
+#include <log.h>
 #include <lpuart.h>
 #include <gpio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <rcc.h>
+#include <error.h>
+
+#ifdef LOG_LEVEL
+log_level_t g_log_level = LOG_LEVEL;
+#else
+log_level_t g_log_level = LOG_LEVEL_INFO;
+#endif
 
 int32_t g_lpuart_handle = -1;
 
-void debug_init()
+void log(log_level_t log_level, char *format, ...)
+{
+    if (g_log_level < log_level) {
+        return;
+    }
+    
+    va_list ap;
+    char msg[LOG_MSG_MAX_LENGTH];
+    uint32_t msg_length = 0;
+    
+    va_start(ap, format);
+    string_format(format, ap, msg, LOG_MSG_MAX_LENGTH);
+    va_end(ap);
+
+    msg_length = strlen(msg);
+    lpuart_write(g_lpuart_handle, msg, msg_length);
+}
+
+uint8_t log_wait_for_input()
+{
+    while (lpuart_rx_empty());
+    return lpuart_read(g_lpuart_handle);
+}
+
+void log_init()
 {
     gpio_configuration_t tx_pin_config;
     gpio_configuration_t rx_pin_config;
@@ -39,25 +70,4 @@ void debug_init()
     lpuart_config.baud_rate_prescaler = 0x8ae3;
     lpuart_config.stop_bits = LPUART_STOP_BITS_1;
     g_lpuart_handle = lpuart_open(lpuart_config);
-}
-
-void debug_print(char *format, ...)
-{
-    va_list ap;
-    char msg[DEBUG_MSG_MAX_LENGTH];
-    uint32_t msg_length = 0;
-    
-    va_start(ap, format);
-    string_format(format, ap, msg, DEBUG_MSG_MAX_LENGTH);
-    va_end(ap);
-
-    msg_length = strlen(msg);
-    lpuart_write(g_lpuart_handle, msg, msg_length);
-}
-
-
-uint8_t debug_wait_for_input()
-{
-    while (lpuart_rx_empty());
-    return lpuart_read(g_lpuart_handle);
 }

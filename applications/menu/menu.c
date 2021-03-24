@@ -3,7 +3,7 @@
 #include <event_handler.h>
 #include <display.h>
 #include <terminal.h>
-#include <debug.h>
+#include <log.h>
 #include <menu.h>
 #include <time.h>
 #include <task_manager.h>
@@ -28,7 +28,7 @@ void menu_set_menu_items()
 {
     task_manager_t *task_manager = task_manager_get();
     if (!task_manager) {
-        debug_print("ERROR [menu.c] invalid task_manager pointer\n");
+        log_error(ERROR_INVALID, "Failed to get task_manager");
         return;
     }
 
@@ -40,7 +40,7 @@ void menu_set_menu_items()
         }
 
         if (menu_item_index == MENU_ITEM_MAX) {
-            debug_print("ERROR [menu.c] exceeded menu_item buffer\r\n");
+            log_error(ERROR_INVALID, "exceeded menu_item buffer");
             break;
         }
         

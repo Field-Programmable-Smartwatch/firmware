@@ -7,14 +7,14 @@
 #include <ATtui.h>
 #include <display.h>
 #include <terminal.h>
-#include <debug.h>
+#include <log.h>
 
 task_manager_t g_task_manager;
 extern uint32_t *_bootloader_magic[];
 
 static void bootloader_reboot()
 {
-    debug_print("LOADING BOOTLOADER!\r\n");
+    log_info("LOADING BOOTLOADER!");
     display_clear();
     terminal_print_at(0, 4, "LOADING BOOTLOADER");
     display_render();

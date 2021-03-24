@@ -2,7 +2,7 @@
 #include <stdarg.h> 
 #include <display.h>
 #include <string.h>
-#include <debug.h>
+#include <log.h>
 
 #define MSG_MAX_LENGTH 256
 

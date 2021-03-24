@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stdarg.h>
-#include <debug.h>
 
 #define INT_STR_MAX_LENGTH 12
 

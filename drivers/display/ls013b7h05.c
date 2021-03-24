@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include <gpio.h>
-#include <debug.h>
+#include <log.h>
 #include <spi.h>
 #include <display.h>
 #include <rcc.h>
@@ -46,11 +46,13 @@ error_t display_init()
     cs_pin.pull_resistor = GPIO_PULL_RESISTOR_NONE;
     error = gpio_configure_pin(cs_pin);
     if (error) {
+        log_error(error, "Failed to configure CS pin");
         return error;
     }
     
     error = gpio_write(cs_pin.port, cs_pin.pin, 0);
     if (error) {
+        log_error(error, "Failed to write CS pin");
         return error;
     }
 
@@ -63,6 +65,7 @@ error_t display_init()
     spi1.data_size = SPI_DATA_SIZE_8BIT;
     error = spi_open(spi1, &g_spi_handle);
     if (error) {
+        log_error(error, "Failed to open SPI device");
         return error;
     }
 
@@ -79,6 +82,7 @@ error_t display_render()
     // set Chip Select to high
     error = gpio_write(GPIOB, 7, 1);
     if (error) {
+        log_error(error, "Failed to enable device");
         return error;
     }
 
@@ -88,6 +92,7 @@ error_t display_render()
     uint8_t update_data_msg = (vcom<<6) | 0x80;
     error = spi_write(g_spi_handle, &update_data_msg, 1);
     if (error) {
+        log_error(error, "Failed to write update data to display");
         goto exit;
     }
 
@@ -106,20 +111,26 @@ error_t display_render()
         // Send it
         error = spi_write(g_spi_handle, msg, (DISPLAY_WIDTH/8)+2);
         if (error) {
+            log_error(error, "Failed to write pixel data to display");
             goto exit;
         }
     }
 
  exit:
     // set Chip select to low
-    gpio_write(GPIOB, 7, 0);
+    error = gpio_write(GPIOB, 7, 0);
+    if (error) {
+        log_error(error, "Failed to disable device");
+    }
+    
     return error;
 }
 
 error_t display_draw_pixel(uint32_t x, uint32_t y, uint8_t value)
 {
     if (x > DISPLAY_WIDTH || y > DISPLAY_HEIGHT) {
-        debug_print("x:%u or y:%u exceeds display width:%u or height:%u\r\n", x, y, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        log_error(ERROR_INVALID, "x:%u or y:%u exceeds display width:%u or height:%u",
+                  x, y, DISPLAY_WIDTH, DISPLAY_HEIGHT);
         return ERROR_INVALID;
     }
     
@@ -148,12 +159,13 @@ error_t display_draw_pixel(uint32_t x, uint32_t y, uint8_t value)
 error_t display_draw_bitmap(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint8_t *bitmap)
 {
     if (x > DISPLAY_WIDTH || y > DISPLAY_HEIGHT) {
-        debug_print("x:%u or y:%u exceeds display width:%u or height:%u\r\n", x, y, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        log_error(ERROR_INVALID, "x:%u or y:%u exceeds display width:%u or height:%u\r\n",
+                  x, y, DISPLAY_WIDTH, DISPLAY_HEIGHT);
         return ERROR_INVALID;
     }
 
     if (x + width > DISPLAY_WIDTH || y + height > DISPLAY_HEIGHT) {
-        debug_print("bitmap exceeds screen bounds\r\n");
+        log_error(ERROR_INVALID, "bitmap exceeds screen bounds");
         return ERROR_INVALID;
     }
 
@@ -162,6 +174,7 @@ error_t display_draw_bitmap(uint32_t x, uint32_t y, uint32_t width, uint32_t hei
         for (uint32_t x_1 = 0; x_1 < width; x_1++) {
             error_t error = display_draw_pixel(x + x_1, y + y_1, (bitmap[y_1] & (1 << (8-x_1))));
             if (error) {
+                log_error(error, "Unable to draw pixel to display");
                 return error;
             }
         }

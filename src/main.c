@@ -5,7 +5,7 @@
 #include <terminal.h>
 #include <gpio.h>
 #include <lpuart.h>
-#include <debug.h>
+#include <log.h>
 #include <spi.h>
 #include <display.h>
 #include <systick_timer.h>
@@ -53,44 +53,54 @@ void main()
     RCC->CIER |= 1 << 2;
 
     lpuart_init();
-    debug_init();
-    debug_print("In main\r\n");
+    log_init();
+    log_debug("Kernel Start");
     
     error = spi_init();
     if (error) {
-        debug_print("Failed to initialize spi\r\n");
+        log_error(error, "Failed to initialize SPI");
     }
+    log_debug("Kernel initialized SPI");
     
     systick_timer_init();
     systick_timer_start();
+    log_debug("Kernel initialized systick timer");
     
     error = display_init();
     if (error) {
-        debug_print("Failed to initialize display\r\n");
+        log_error(error, "Failed to initialize display");
     }
+    log_debug("Kernel initialized display");
     
     error = sdcard_init();
     if (error) {
-        debug_print("Failed to initialize sdcard\r\n");
+        log_error(error, "Failed to initialize SDcard");
     }
+    log_debug("Kernel initialized SDcard");
     
     error = bluefruit_init();
     if (error) {
-        debug_print("Failed to initialize bluefruit\r\n");
+        log_error(error, "Failed to initialize bluefruit");
     }
+    log_debug("Kernel initialized bluefruit");
     
     event_handler_init();
-
+    log_debug("Kernel initialized event handler");
+    
     error = rtc_init();
     if (error) {
-        debug_print("Failed to initialize rtc\r\n");
+        log_error(error, "Failed to initialize RTC");
     }
+    log_debug("Kernel initialized RTC");
 
     terminal.width = 18;
     terminal.height = 10;
     terminal_init(terminal);
+    log_debug("Kernel initialized terminal");
     
     task_manager_init();
+    log_debug("Kernel initialized task manager");
+    log_debug("Kernel starting task");
     task_manager_start();
 }
 
@@ -116,20 +126,21 @@ void __attribute__((naked)) Reset_Handler()
 
     main();
 }
+
 void HardFault_Handler()
 {
-    debug_print("KERNEL HARD FAULT\r\n");
+    log_error(ERROR_FAULT, "HARD FAULT");
     NVIC_SystemReset();
 }
 
 void BusFault_Handler()
 {
-    debug_print("KERNEL BUS FAULT\r\n");
+    log_error(ERROR_FAULT, "BUS FAULT");
     NVIC_SystemReset();
 }
 
 void UsageFault_Handler()
 {
-    debug_print("KERNEL USAGE FAULT\r\n");
-    NVIC_SystemReset();    
+    log_error(ERROR_FAULT, "USEAGE FAULT");
+    NVIC_SystemReset();
 }

@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "spi.h"
 #include <rcc.h>
-#include <debug.h>
+#include <log.h>
 #include <gpio.h>
 #include <string.h>
 #include <error.h>
@@ -18,6 +18,7 @@ static error_t spi_configure(int32_t spi_handle)
     if (spi_handle < 0 ||
         spi_handle >= SPI_DEVICE_MAX ||
         !g_spi_devices[spi_handle].is_open) {
+        log_error(ERROR_INVALID, "Invalid SPI handle");
         return ERROR_INVALID;
     }
 
@@ -106,6 +107,7 @@ error_t spi_read_write(int32_t spi_handle, void *rdata, uint8_t wdata, uint32_t 
     if (spi_handle < 0 ||
         spi_handle >= SPI_DEVICE_MAX ||
         !g_spi_devices[spi_handle].is_open) {
+        log_error(ERROR_INVALID, "Invalid SPI handle");
         return ERROR_INVALID;
     }
 
@@ -127,6 +129,7 @@ error_t spi_read(int32_t spi_handle, void *buffer, uint32_t length)
     if (spi_handle < 0 ||
         spi_handle >= SPI_DEVICE_MAX ||
         !g_spi_devices[spi_handle].is_open) {
+        log_error(ERROR_INVALID, "Invalid SPI handle");
         return ERROR_INVALID;
     }
 
@@ -147,6 +150,7 @@ error_t spi_write(int32_t spi_handle, void *data, uint32_t length)
     if (spi_handle < 0 ||
         spi_handle >= SPI_DEVICE_MAX ||
         !g_spi_devices[spi_handle].is_open) {
+        log_error(ERROR_INVALID, "Invalid SPI handle");
         return ERROR_INVALID;
     }
 
@@ -166,6 +170,7 @@ error_t spi_open(spi_configuration_t config, spi_handle_t *spi_handle)
 {
     int32_t handle = spi_find_free_device();
     if (handle < 0) {
+        log_error(ERROR_NO_MEMORY, "Unable to find free device");
         return ERROR_NO_MEMORY;
     }
 
@@ -181,6 +186,7 @@ error_t spi_close(int32_t spi_handle)
 {
     if (spi_handle < 0 ||
         spi_handle >= SPI_DEVICE_MAX ) {
+        log_error(ERROR_INVALID, "Invalid SPI handle");
         return ERROR_INVALID;
     }
 
@@ -208,6 +214,7 @@ error_t spi_init()
     sck_pin.alternative_function = 5;
     error = gpio_configure_pin(sck_pin);
     if (error) {
+        log_error(error, "Failed to configure sck pin");
         return error;
     }
 
@@ -220,6 +227,7 @@ error_t spi_init()
     miso_pin.alternative_function = 5;
     error = gpio_configure_pin(miso_pin);
     if (error) {
+        log_error(error, "Failed to configure miso pin");
         return error;
     }
 
@@ -232,6 +240,7 @@ error_t spi_init()
     mosi_pin.alternative_function = 5;
     error = gpio_configure_pin(mosi_pin);
     if (error) {
+        log_error(error, "Failed to configure mosi pin");
         return error;
     }
 

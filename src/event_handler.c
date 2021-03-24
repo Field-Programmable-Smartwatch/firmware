@@ -4,7 +4,7 @@
 #include <gpio.h>
 #include <event_handler.h>
 #include <systick_timer.h>
-#include <debug.h>
+#include <log.h>
 
 #define EVENT_SOURCE_MAX 3
 #define DEBOUNCE_THRESHOLD 5 // In millisec
@@ -30,7 +30,7 @@ static void event_handler_add_event_source(uint32_t id, GPIO_TypeDef *gpio_port,
     event_source_t *event_source = event_handler_find_inactive_event_source();
     
     if (!event_source) {
-        debug_print("ERROR: event_source_add: passed NULL event_source\r\n");
+        log_error(ERROR_INVALID, "Failed to find inactive event source");
         return;
     }
     

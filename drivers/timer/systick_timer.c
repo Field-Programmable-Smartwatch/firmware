@@ -1,6 +1,6 @@
 #include <stm32wb55xx.h>
 #include <systick_timer.h>
-#include <debug.h>
+#include <log.h>
 
 #define SYS_CLOCK 16000000L
 

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <gpio.h>
 #include <lpuart.h>
-#include <debug.h>
+#include <log.h>
 #include <spi.h>
 #include <rcc.h>
 #include <sdcard.h>
@@ -76,18 +76,26 @@ void bootloader_main()
     __enable_irq();
 
     lpuart_init();
-    debug_init();
+    log_init();
+    log_debug("Bootloader Start");
 
     error = spi_init();
     if (error) {
-        debug_print("BOOTLOADER: Failed to initialize spi\r\n");
+        log_error(error, "Failed to initialize spi\r\n");
+        while(1);
     }
-    
+    log_debug("Bootloader initialized SPI");
+
     error = sdcard_init();
     if (error) {
-        debug_print("BOOTLOADER: Failed to initialize sdcard\r\n");
+        log_error(error, "Failed to initialize sdcard\r\n");
+        while(1);
     }
+    log_debug("Bootloader initialized SDcard");
+
     elf_load();
+    log_debug("Bootloader loaded kernel into RAM");
+    log_debug("Bootloader jumping to kernel main");
     jump_to_kernel_main();
 }
 
@@ -117,18 +125,18 @@ void __attribute__((naked)) Reset_Handler()
 
 void HardFault_Handler()
 {
-    debug_print("HARD FAULT\r\n");
+    log_error(ERROR_FAULT, "HARD FAULT");
     NVIC_SystemReset();
 }
 
 void BusFault_Handler()
 {
-    debug_print("BUS FAULT\r\n");
+    log_error(ERROR_FAULT, "BUS FAULT");
     NVIC_SystemReset();
 }
 
 void UsageFault_Handler()
 {
-    debug_print("USEAGE FAULT\r\n");
+    log_error(ERROR_FAULT, "USEAGE FAULT");
     NVIC_SystemReset();
 }

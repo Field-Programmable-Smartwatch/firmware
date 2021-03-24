@@ -5,7 +5,7 @@
 #include <systick_timer.h>
 #include <sdep.h>
 #include <rcc.h>
-#include <debug.h>
+#include <log.h>
 #include <string.h>
 #include <error.h>
 
@@ -36,7 +36,8 @@ static error_t bluefruit_send(sdep_command_t command, void *payload, uint32_t si
     packet.message_type = SDEP_MESSAGE_TYPE_COMMAND;
     packet.command = command;
     packet.payload_size = size;
-    /* debug_print("sending packet:\r\n type: %x\r\n command: %x\r\n length: %u\r\n", packet.message_type, packet.command, size); */
+    log_debug("sending packet:\r\n type: %x\r\n command: %x\r\n length: %u\r\n",
+              packet.message_type, packet.command, size);
 
     bluefruit_select();
     error = spi_write(g_spi_handle, &packet, sizeof(sdep_header_t));
@@ -59,7 +60,7 @@ static error_t bluefruit_send(sdep_command_t command, void *payload, uint32_t si
 static error_t bluefruit_receive(sdep_header_t *packet_header, void *payload)
 {
     if (!packet_header || !payload) {
-        debug_print("bluefruit_receive: NULL buffers\r\n");
+        log_error(ERROR_INVALID, "NULL header or payload");
         return ERROR_INVALID;
     }
 
@@ -71,10 +72,10 @@ static error_t bluefruit_receive(sdep_header_t *packet_header, void *payload)
     do {
         gpio_read(BLUEFRUIT_IRQ_PORT, BLUEFRUIT_IRQ_PIN, &irq_value);
         count++;
-    } while(irq_value == 0 && count < 50);
+    } while(irq_value == 0 && count < 100);
     
-    if (count == 50) {
-        debug_print("bluefruit_read: no data to be received\r\n");
+    if (count == 100) {
+        log_error(ERROR_IO, "No data to be received");
         return ERROR_IO;
     }
     
@@ -85,7 +86,10 @@ static error_t bluefruit_receive(sdep_header_t *packet_header, void *payload)
     do {
         // Find the packet header
         error = spi_read_write(g_spi_handle, &packet_header->message_type, 0xff, 1);
-        if (error) goto exit;
+        if (error) {
+            log_error(error, "Failed to get packet header");
+            goto exit;
+        }
 
         if (packet_header->message_type == 0xff) {
             bluefruit_deselect();
@@ -97,24 +101,32 @@ static error_t bluefruit_receive(sdep_header_t *packet_header, void *payload)
              count++ < 50);
 
     if (count == 50) {
-        debug_print("bluefruit_read: failed to read packet\r\n");
-        return ERROR_IO;
+        error = ERROR_IO;
+        log_error(error, "Failed to read packet type");
+        goto exit;
     }
 
     // Receive the rest of the packet header
     error = spi_read_write(g_spi_handle, (&packet_header->message_type)+1, 0xff, 3);
-    if (error) goto exit;
-
-    if (packet_header->payload_size > 16) {
-        debug_print("bluefruit_receive: payload size too big\r\n");
-        return ERROR_INVALID;
+    if (error) {
+        log_error(error, "Failed to read packet header");
+        goto exit;
     }
 
-    /* debug_print("\r\nRecv packet:\r\n type: %x\r\n cmd: %x\r\n size: %u\r\n", */
-    /*             packet_header->message_type,packet_header->command,packet_header->payload_size); */
+    if (packet_header->payload_size > 16) {
+        error = ERROR_INVALID;
+        log_error(error, "payload size too big");
+        goto exit;
+    }
+
+    log_debug("\r\nRecv packet:\r\n type: %x\r\n cmd: %x\r\n size: %u\r\n",
+              packet_header->message_type,packet_header->command,packet_header->payload_size);
 
     // Receive the payload
     error = spi_read_write(g_spi_handle, payload, 0xff, packet_header->payload_size);
+    if (error) {
+        log_error(error, "Failed to receieve payload");
+    }
 
  exit:
     bluefruit_deselect();
@@ -136,7 +148,7 @@ error_t bluefruit_read(void *buffer, uint32_t size)
     do {
         error = bluefruit_receive(&packet_header, payload);
         if (error) {
-            debug_print("Failed to receive packet\r\n");
+            log_error(error, "Failed to receive packet");
             return error;
         }
         uint32_t copy_size = (size < packet_header.payload_size) ? size : packet_header.payload_size;
@@ -192,14 +204,14 @@ error_t bluefruit_init()
     spi.data_size = SPI_DATA_SIZE_8BIT;
     error = spi_open(spi, &g_spi_handle);
     if (error) {
-        debug_print("Failed to open spi device\r\n");
+        log_error(error, "Failed to open SPI device");
         return error;
     }
 
     // Reset Bluefruit Device
     error = bluefruit_send(SDEP_COMMAND_INITIALIZE, 0, 0);
     if (error) {
-        debug_print("Failed to send reset command\r\n");
+        log_error(error, "Failed to send rest command");
         return error;
     }
     // Wait one second to reboot Bluefruit

@@ -1,6 +1,6 @@
 #include <elf32.h>
 #include <sdcard.h>
-#include <debug.h>
+#include <log.h>
 #include <string.h>
 
 void elf_load_program(elf_program_header_t program_header)
@@ -40,7 +40,7 @@ void elf_load()
         block[1] != 'E' ||
         block[2] != 'L' ||
         block[3] != 'F') {
-        debug_print("ERROR: ELF file not located at beginning of SD card\r\n");
+        log_error(ERROR_INVALID, "ELF file not located at beginning of SD card");
         return;
     }
 
@@ -49,7 +49,7 @@ void elf_load()
     memcpy(&file_header, &block[0], sizeof(elf_file_header_t));
     program_header_table = (elf_program_header_t *)(block + file_header.program_header_offset);
     if (file_header.program_header_count * file_header.program_header_size > (512 - file_header.size)) {
-        debug_print("ERROR: Too many program headers %u\r\n", file_header.program_header_count);
+        log_error(ERROR_INVALID, "Too many program headers %u", file_header.program_header_count);
         return;
     }
 
