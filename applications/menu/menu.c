@@ -35,7 +35,7 @@ void menu_set_menu_items()
     uint32_t menu_item_index = 0;
     for (uint32_t i = 0; i < task_manager->task_count; i++) {
         task_t *task = &task_manager->task_list[i];
-        if (strncmp(task->name, "Menu", MENU_ITEM_NAME_MAX) == 0) {
+        if (string_is_equal(task->name, string("Menu"))) {
             continue;
         }
 
@@ -43,15 +43,17 @@ void menu_set_menu_items()
             log_error(ERROR_INVALID, "exceeded menu_item buffer");
             break;
         }
-        
-        strncpy(g_menu_items[menu_item_index].name, task->name, MENU_ITEM_NAME_MAX);
+
+        g_menu_items[menu_item_index].name = string_init(g_menu_items[menu_item_index].name_data, 0,
+                                                         MENU_ITEM_NAME_MAX);
+        string_copy(&g_menu_items[menu_item_index].name, task->name);
         menu_item_index++;
     }
 }
 
 void menu_application_start()
 {
-    task_t *menu_task = task_manager_get_task_by_name("Menu");
+    task_t *menu_task = task_manager_get_task_by_name(string("Menu"));
     event_queue_t event_queue;
     menu_set_menu_items();
     display_clear();

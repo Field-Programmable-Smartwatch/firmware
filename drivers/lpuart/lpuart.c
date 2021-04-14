@@ -110,7 +110,7 @@ int32_t lpuart_open(lpuart_configuration_t config)
         return -2;
     }
 
-    memcpy(&g_lpuart_devices[lpuart_handle], &config, sizeof(lpuart_configuration_t));    
+    memory_copy(&g_lpuart_devices[lpuart_handle], &config, sizeof(lpuart_configuration_t));    
     g_lpuart_devices[lpuart_handle].is_open = true;
     lpuart_configure(lpuart_handle);
     return lpuart_handle;

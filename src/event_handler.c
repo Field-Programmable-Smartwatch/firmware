@@ -34,7 +34,7 @@ static void event_handler_add_event_source(uint32_t id, GPIO_TypeDef *gpio_port,
         return;
     }
     
-    memset(event_source, 0, sizeof(event_source_t));
+    memory_set(event_source, 0, sizeof(event_source_t));
     event_source->active = true;
     event_source->id = id;
     event_source->gpio_port = gpio_port;

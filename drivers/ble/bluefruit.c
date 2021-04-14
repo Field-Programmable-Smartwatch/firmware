@@ -143,7 +143,7 @@ error_t bluefruit_read(void *buffer, uint32_t size)
     uint8_t *buffer_ptr = buffer;
     sdep_header_t packet_header;
     uint8_t payload[16];
-    memset(&packet_header, 0, sizeof(sdep_header_t));
+    memory_set(&packet_header, 0, sizeof(sdep_header_t));
 
     do {
         error = bluefruit_receive(&packet_header, payload);
@@ -153,7 +153,7 @@ error_t bluefruit_read(void *buffer, uint32_t size)
         }
         uint32_t copy_size = (size < packet_header.payload_size) ? size : packet_header.payload_size;
         size -= copy_size;
-        memcpy(buffer_ptr, payload, copy_size);
+        memory_copy(buffer_ptr, payload, copy_size);
         buffer_ptr += copy_size;
         // Need to put in this wait, looks like packets get corrupted if not. Maybe clock too fast?
         systick_timer_wait_ms(50);

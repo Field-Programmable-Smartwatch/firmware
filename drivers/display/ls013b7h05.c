@@ -70,7 +70,7 @@ error_t display_init()
     }
 
     // Zero out display buffer
-    memset(display_buffer, 0, display_buffer_size);
+    memory_set(display_buffer, 0, display_buffer_size);
 
     return SUCCESS;
 }
@@ -103,7 +103,7 @@ error_t display_render()
         msg[0] = reverse_byte(line + 1);
 
         // Copy over buffer data
-        memcpy(&msg[1], &display_buffer[(line)*(DISPLAY_WIDTH/8)], DISPLAY_WIDTH/8);
+        memory_copy(&msg[1], &display_buffer[(line)*(DISPLAY_WIDTH/8)], DISPLAY_WIDTH/8);
 
         // Write end byte
         msg[(DISPLAY_WIDTH/8)+1] = 0;
@@ -185,7 +185,7 @@ error_t display_draw_bitmap(uint32_t x, uint32_t y, uint32_t width, uint32_t hei
 
 void display_clear()
 {
-    memset(display_buffer, 0, display_buffer_size);
+    memory_set(display_buffer, 0, display_buffer_size);
 }
 
 void display_set_draw_attr(display_draw_attr_t attr)

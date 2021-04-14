@@ -18,14 +18,14 @@ char *months[] = {"January", "February", "March", "April", "May", "June",
 
 void draw_time(datetime_t *datetime)
 {
-    terminal_print_at(6, 3, "%s", weekdays[datetime->weekday]);
-    terminal_print_at(5, 4, "%s %u", months[datetime->month], datetime->day);
-    terminal_print_at(5, 5, "%02u:%02u.%02u", datetime->hours, datetime->minutes, datetime->seconds);
+    terminal_print_at(6, 3, string("%s"), string(weekdays[datetime->weekday]));
+    terminal_print_at(5, 4, string("%s %u"), string(months[datetime->month]), datetime->day);
+    terminal_print_at(5, 5, string("%02u:%02u.%02u"), datetime->hours, datetime->minutes, datetime->seconds);
 }
 
 void change_time()
 {
-    task_t *task = task_manager_get_task_by_name("Set Time");
+    task_t *task = task_manager_get_task_by_name(string("Set Time"));
     uint8_t select_button_count = 0;
     event_queue_t event_queue;
     bool time_changed;
@@ -34,7 +34,7 @@ void change_time()
     rtc_get_date_and_time(&datetime);
     display_clear();
     draw_time(&datetime);
-    terminal_print_at(0, 0, "Changing hours");
+    terminal_print_at(0, 0, string("Changing hours"));
     display_render();
 
     while (task->status == TASK_STATUS_RUNNING) {
@@ -71,7 +71,7 @@ void change_time()
                     if (select_button_count == 2) {
                         rtc_set_date_and_time(&datetime);
                         task->status = TASK_STATUS_STOP;
-                        task_manager_start_task_by_name("Time");
+                        task_manager_start_task_by_name(string("Time"));
                     }
                     select_button_count++;
                 }
@@ -103,13 +103,13 @@ void change_time()
         if (time_changed) {
             draw_time(&datetime);
             if (select_button_count == 0) {
-                terminal_print_at(0, 0, "Changing hours");
+                terminal_print_at(0, 0, string("Changing hours"));
             }
             if (select_button_count == 1) {
-                terminal_print_at(0, 0, "Changing minutes");
+                terminal_print_at(0, 0, string("Changing minutes"));
             }
             if (select_button_count == 2) {
-                terminal_print_at(0, 0, "Changing seconds");
+                terminal_print_at(0, 0, string("Changing seconds"));
             }
             display_render();
         }
@@ -118,7 +118,8 @@ void change_time()
 
 void time_application_start()
 {
-    task_t *task = task_manager_get_task_by_name("Time");
+    log_debug("Starting time_app");
+    task_t *task = task_manager_get_task_by_name(string("Time"));
     event_queue_t event_queue;
     datetime_t datetime;
     rtc_get_date_and_time(&datetime);
@@ -133,17 +134,17 @@ void time_application_start()
             if (event.type == EVENT_TYPE_POS_EDGE) {
                 if (event.id == ID_BUTTON_UP) {
                     task->status = TASK_STATUS_STOP;
-                    task_manager_start_task_by_name("Menu");
+                    task_manager_start_task_by_name(string("Menu"));
                 }
 
                 if (event.id == ID_BUTTON_SELECT) {
                     task->status = TASK_STATUS_STOP;
-                    task_manager_start_task_by_name("Menu");
+                    task_manager_start_task_by_name(string("Menu"));
                 }
 
                 if (event.id == ID_BUTTON_DOWN) {
                     task->status = TASK_STATUS_STOP;
-                    task_manager_start_task_by_name("Menu");
+                    task_manager_start_task_by_name(string("Menu"));
                 }
             }
         }
@@ -151,5 +152,4 @@ void time_application_start()
         draw_time(&datetime);
         display_render();
     }
-    
 }

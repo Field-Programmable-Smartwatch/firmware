@@ -111,11 +111,11 @@ void __attribute__((naked)) Reset_Handler()
 
     // Copy data section from flash memory to ram
     uint32_t data_section_size = _edata - _sdata;
-    memcpy(_sdata, _sidata, data_section_size*4);
+    memory_copy(_sdata, _sidata, data_section_size*4);
 
     // Zero out bss
     uint32_t bss_section_size = _ebss - _sbss;
-    memset(_sbss, 0, bss_section_size*4);
+    memory_set(_sbss, 0, bss_section_size*4);
 
     // Set Interrupt Vector Table Offset
     SCB->VTOR = (uint32_t)interrupt_vector_table;
