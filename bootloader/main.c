@@ -50,11 +50,11 @@ void load_kernel()
 {
     uint8_t block[512];
 
-    memset(block , 0, 512);
+    memory_set(block , 0, 512);
     uint8_t *addr = (uint8_t *)(KERNEL_START_ADDR);
     for (uint32_t i = 0; i < KERNEL_SIZE_IN_BLOCKS; i++) {
         sdcard_read_block(i, block);
-        memcpy(addr, block, 512);
+        memory_copy(addr, block, 512);
         addr += 512;
     }
 }
@@ -106,11 +106,11 @@ void __attribute__((naked)) Reset_Handler()
 
     // Copy data section from flash memory to ram
     uint32_t data_section_size = _edata - _sdata;
-    memcpy(_sdata, _sidata, data_section_size*4);
+    memory_copy(_sdata, _sidata, data_section_size*4);
 
     // Zero out bss
     uint32_t bss_section_size = _ebss - _sbss;
-    memset(_sbss, 0, bss_section_size*4);
+    memory_set(_sbss, 0, bss_section_size*4);
 
     // Set Interrupt Vector Table Offset
     SCB->VTOR = (uint32_t)interrupt_vector_table;

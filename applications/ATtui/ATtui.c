@@ -28,7 +28,7 @@ static int32_t ATtui_send_command(uint8_t *command, uint32_t size)
 
 static int32_t ATtui_get_response(uint8_t *response, uint32_t size)
 {
-    memset(response, 0, size);
+    memory_set(response, 0, size);
     bluefruit_read(response, size);
     return 0;
 }
@@ -38,10 +38,10 @@ void ATtui_application_start()
     uint32_t command_length = 0;
     uint8_t command[ATtui_COMMAND_MAX];
     uint8_t response[ATtui_RESPONSE_MAX];
-    task_t *task = task_manager_get_task_by_name("ATtui");
+    task_t *task = task_manager_get_task_by_name(string("ATtui"));
 
-    memset(command, 0, ATtui_COMMAND_MAX);
-    memset(response, 0, ATtui_RESPONSE_MAX);
+    memory_set(command, 0, ATtui_COMMAND_MAX);
+    memory_set(response, 0, ATtui_RESPONSE_MAX);
     
     log(LOG_LEVEL_INFO, "> ");
     while (task->status == TASK_STATUS_RUNNING) {
@@ -55,11 +55,11 @@ void ATtui_application_start()
             log(LOG_LEVEL_INFO, "\b \b");
 
         } else if (c == '\r') { // Enter key pressed
-            if (memcmp(command, "exit", 4) == 0) { // Exit command
+            if (memory_is_equal(command, "exit", 4)) { // Exit command
                 task->status = TASK_STATUS_STOP;
-                task_manager_start_task_by_name("Menu");
+                task_manager_start_task_by_name(string("Menu"));
                 break;
-            } else if (memcmp(command, "send", 4) == 0) { // Send command
+            } else if (memory_is_equal(command, "send", 4)) { // Send command
                 ATtui_send_uart(command+5, command_length-5);
             } else {
                 ATtui_send_command(command, command_length);

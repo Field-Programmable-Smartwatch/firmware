@@ -60,8 +60,8 @@ static error_t sdcard_send_command(uint8_t cmd, uint32_t arg, uint8_t *response)
     };
     uint8_t crc = crc7_calculate(msg, 5) + 1;
 
-    memcpy(packet, msg, 5);
-    memcpy(&packet[5], &crc, 1);
+    memory_copy(packet, msg, 5);
+    memory_copy(&packet[5], &crc, 1);
     
     error = sdcard_wait_till_ready();
     if (error) {
@@ -86,7 +86,7 @@ static error_t sdcard_send_command(uint8_t cmd, uint32_t arg, uint8_t *response)
     } while ((*response & 0x80) && count);
 
     if (!count) {
-        log_error(error, "Timed out while trying to get packet acknowledgment");
+        log_error(ERROR_TIMEOUT, "Timed out while trying to get packet acknowledgment");
         return ERROR_TIMEOUT;
     }
     return SUCCESS;
@@ -155,9 +155,9 @@ error_t sdcard_write_block(uint32_t addr, void *buffer)
     uint16_t crc = 0xffff;
     uint8_t resp;
     
-    memcpy(&msg[0], &data_start_token, 1);
-    memcpy(&msg[1], buffer, 512);
-    memcpy(&msg[513], &crc, 2);
+    memory_copy(&msg[0], &data_start_token, 1);
+    memory_copy(&msg[1], buffer, 512);
+    memory_copy(&msg[513], &crc, 2);
 
     error = spi_write(g_spi_handle, msg, 515);
     if (error) {

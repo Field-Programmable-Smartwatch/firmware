@@ -2,6 +2,7 @@
 #define TASK_MANAGER_H
 
 #include <stdint.h>
+#include <string.h>
 
 #define TASK_LIST_MAX 16
 #define TASK_NAME_MAX 16
@@ -15,7 +16,8 @@ typedef enum task_status {
 
 typedef struct task {
     task_status_t status;
-    char name[TASK_NAME_MAX];
+    char name_data[TASK_NAME_MAX];
+    string_t name;
     void (*task_start)(void);
 } task_t;
 
@@ -25,9 +27,9 @@ typedef struct task_manager{
 } task_manager_t;
 
 
-task_t *task_manager_get_task_by_name(char *name);
-uint32_t task_manager_start_task_by_name(char *name);
-void task_manager_add_task(char *task_name, void (*task_start)(void));
+task_t *task_manager_get_task_by_name(string_t name);
+uint32_t task_manager_start_task_by_name(string_t name);
+void task_manager_add_task(string_t task_name, void (*task_start)(void));
 task_manager_t *task_manager_get();
 void task_manager_init();
 void task_manager_start();

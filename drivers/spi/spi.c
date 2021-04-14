@@ -174,7 +174,7 @@ error_t spi_open(spi_configuration_t config, spi_handle_t *spi_handle)
         return ERROR_NO_MEMORY;
     }
 
-    memcpy(&g_spi_devices[handle], &config, sizeof(spi_configuration_t));
+    memory_copy(&g_spi_devices[handle], &config, sizeof(spi_configuration_t));
     g_spi_devices[handle].is_open = true;
     spi_configure(handle);
 

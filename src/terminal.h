@@ -2,6 +2,7 @@
 #define TERMINAL_H
 
 #include <stdint.h>
+#include <string.h>
 
 typedef struct terminal_cursor {
     uint32_t x;
@@ -29,7 +30,7 @@ typedef struct terminal_configuration {
 
 void terminal_init(terminal_configuration_t config);
 void terminal_set_cursor(uint32_t x, uint32_t y);
-void terminal_print(char *format, ...);
-void terminal_print_at(uint32_t x, uint32_t y, char *format, ...);
+void terminal_print(string_t format, ...);
+void terminal_print_at(uint32_t x, uint32_t y, string_t format, ...);
 
 #endif

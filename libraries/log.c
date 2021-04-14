@@ -15,22 +15,79 @@ log_level_t g_log_level = LOG_LEVEL_INFO;
 
 int32_t g_lpuart_handle = -1;
 
-void log(log_level_t log_level, char *format, ...)
+static void log_print(char *format, va_list ap)
 {
-    if (g_log_level < log_level) {
+    if (!format) {
         return;
     }
     
-    va_list ap;
-    char msg[LOG_MSG_MAX_LENGTH];
-    uint32_t msg_length = 0;
-    
-    va_start(ap, format);
-    string_format(format, ap, msg, LOG_MSG_MAX_LENGTH);
-    va_end(ap);
+    char msg_data[LOG_MSG_MAX_LENGTH];
+    string_t msg = string_init(msg_data, 0, LOG_MSG_MAX_LENGTH);
+    string_t format_string = string(format);
 
-    msg_length = strlen(msg);
-    lpuart_write(g_lpuart_handle, msg, msg_length);
+    if (msg.error || format_string.error) {
+        return;
+    }
+
+    string_format(&msg, format_string, ap);
+
+    lpuart_write(g_lpuart_handle, string_data(msg), string_size(msg));
+}
+
+void log(log_level_t log_level, char *format, ...)
+{
+    if (g_log_level < log_level || !format) {
+        return;
+    }
+    va_list ap;
+    va_start(ap, format);
+    log_print(format, ap);
+    va_end(ap);
+}
+
+void log_error(error_t error, char *format, ...)
+{
+    if (g_log_level < LOG_LEVEL_ERROR || !format) {
+        return;
+    }
+
+    va_list ap;
+    
+    log(LOG_LEVEL_ERROR, "ERROR %s [%s]: ", string((char *)__func__), string((char *)error_get_message(error)));
+    va_start(ap, format);
+    log_print(format, ap);
+    va_end(ap);
+    log(LOG_LEVEL_ERROR, "\r\n");
+}
+
+void log_info(char *format, ...)
+{
+    if (g_log_level < LOG_LEVEL_INFO || !format) {
+        return;
+    }
+
+    va_list ap;
+    
+    log(LOG_LEVEL_INFO, "INFO %s: ", __func__);
+    va_start(ap, format);
+    log_print(format, ap);
+    va_end(ap);
+    log(LOG_LEVEL_INFO, "\r\n");
+}
+
+void log_debug(char *format, ...)
+{
+    if (g_log_level < LOG_LEVEL_DEBUG || !format) {
+        return;
+    }
+
+    va_list ap;
+
+    log(LOG_LEVEL_DEBUG, "DEBUG %s: ", __func__);
+    va_start(ap, format);
+    log_print(format, ap);
+    va_end(ap);
+    log(LOG_LEVEL_DEBUG, "\r\n");
 }
 
 uint8_t log_wait_for_input()
