@@ -20,6 +20,14 @@ static int32_t ATtui_send_uart(uint8_t *message, uint32_t size)
     return 0;
 }
 
+static int32_t ATtui_recv_uart()
+{
+    uint8_t command[16] = "at+bleuartrx";
+    bluefruit_write(command, 12);
+    systick_timer_wait_ms(50);
+    return 0;
+}
+
 static int32_t ATtui_send_command(uint8_t *command, uint32_t size)
 {
     bluefruit_write(command, size);
@@ -61,6 +69,10 @@ void ATtui_application_start()
                 break;
             } else if (memory_is_equal(command, "send", 4)) { // Send command
                 ATtui_send_uart(command+5, command_length-5);
+
+            } else if (memory_is_equal(command, "recv", 4)) { // recv command
+                ATtui_recv_uart();
+
             } else {
                 ATtui_send_command(command, command_length);
             }
