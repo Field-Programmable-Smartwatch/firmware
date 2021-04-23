@@ -62,13 +62,13 @@ uint32_t rcc_get_system_clock_speed()
     uint32_t system_clock_speed = 0;
     if ((RCC->CFGR & RCC_CFGR_SW) == RCC_SYSTEM_CLOCK_SOURCE_MSI) {
         system_clock_speed = g_msi_clock_speeds[(RCC->CR & RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos];
-        
+
     } else if ((RCC->CFGR & RCC_CFGR_SW) == RCC_SYSTEM_CLOCK_SOURCE_HSI16) {
         system_clock_speed = 16000000;
-        
+
     } else if ((RCC->CFGR & RCC_CFGR_SW) == RCC_SYSTEM_CLOCK_SOURCE_HSE) {
         system_clock_speed = 32000000;
-        
+
     } else if ((RCC->CFGR & RCC_CFGR_SW) == RCC_SYSTEM_CLOCK_SOURCE_PLL) {
         // TODO
         system_clock_speed = 0;
@@ -136,6 +136,16 @@ void rcc_enable_rtc_clock()
 void rcc_disable_rtc_clock()
 {
     RCC->BDCR &= ~RCC_BDCR_RTCEN;
+}
+
+void rcc_enable_i2c3_clock()
+{
+    RCC->APB1ENR1 |= RCC_APB1ENR1_I2C3EN;
+}
+
+void rcc_disable_i2c3_clock()
+{
+    RCC->APB1ENR1 &= ~RCC_APB1ENR1_I2C3EN;
 }
 
 void rcc_disable_interrupts()

@@ -73,6 +73,9 @@ void rcc_disable_lsi2_clock();
 void rcc_enable_rtc_clock();
 void rcc_disable_rtc_clock();
 
+void rcc_enable_i2c3_clock();
+void rcc_disable_i2c3_clock();
+
 void rcc_disable_interrupts();
 
 void rcc_backup_domain_reset();

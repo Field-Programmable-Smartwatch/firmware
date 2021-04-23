@@ -24,10 +24,10 @@ static error_t spi_configure(int32_t spi_handle)
 
     spi_configuration_t *spi_dev = &g_spi_devices[spi_handle];
     g_current_spi_config = spi_handle;
-    
+
     uint32_t cr1_value = 0;
     uint32_t cr2_value = 0;
-    
+
     cr1_value |=
         (spi_dev->clock_mode << SPI_CR1_CPHA_Pos) |
         (spi_dev->mode << SPI_CR1_MSTR_Pos) |
@@ -36,11 +36,11 @@ static error_t spi_configure(int32_t spi_handle)
 
     if (spi_dev->com_mode == SPI_COM_MODE_FULL_DUPLEX) {
         cr1_value &= ~(1 << SPI_CR1_RXONLY_Pos);
-        
+
     } else if (spi_dev->com_mode == SPI_COM_MODE_HALF_DUPLEX_RECEIVE) {
         cr1_value |= 1 << SPI_CR1_BIDIMODE_Pos;
         cr1_value &= ~(1 << SPI_CR1_BIDIOE_Pos);
-        
+
     } else if (spi_dev->com_mode == SPI_COM_MODE_HALF_DUPLEX_TRANSMIT) {
         cr1_value |= (1 << SPI_CR1_BIDIMODE_Pos) |
             (1 << SPI_CR1_BIDIOE_Pos);
@@ -78,7 +78,7 @@ static void spi_transmit_8bit(uint8_t data)
 
 static void spi_receive_8bit(uint8_t *data)
 {
-    *data = SPI1->DR;   
+    *data = SPI1->DR;
 }
 
 static int32_t spi_find_free_device()
@@ -114,7 +114,7 @@ error_t spi_read_write(int32_t spi_handle, void *rdata, uint8_t wdata, uint32_t 
     if (g_current_spi_config != spi_handle) {
         spi_configure(spi_handle);
     }
-    
+
     uint8_t *rd = rdata;
     while (length--) {
         spi_transmit_8bit(wdata);
@@ -136,12 +136,12 @@ error_t spi_read(int32_t spi_handle, void *buffer, uint32_t length)
     if (g_current_spi_config != spi_handle) {
         spi_configure(spi_handle);
     }
-    
+
     uint8_t *d = buffer;
     while (length--) {
         spi_receive_8bit(d++);
     }
-    
+
     return SUCCESS;
 }
 
@@ -157,7 +157,7 @@ error_t spi_write(int32_t spi_handle, void *data, uint32_t length)
     if (g_current_spi_config != spi_handle) {
         spi_configure(spi_handle);
     }
-    
+
     uint8_t *d = data;
     while (length--) {
         spi_transmit_8bit(*d++);
@@ -204,7 +204,7 @@ error_t spi_init()
 
     rcc_enable_spi1_clock();
     rcc_enable_gpioa_clock();
-    
+
     sck_pin.port = GPIOA;
     sck_pin.pin = 5;
     sck_pin.mode = GPIO_MODE_ALT_FUNC;
