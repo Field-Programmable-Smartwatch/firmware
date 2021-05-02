@@ -12,15 +12,16 @@ typedef enum i2c_address_mode {
     I2C_ADDRESS_MODE_10BIT
 } i2c_address_mode_t;
 
-typedef struct i2c_device {
+typedef struct i2c_configuration {
     bool is_open;
     i2c_address_mode_t address_mode;
     uint16_t address;
-} i2c_device_t;
+} i2c_configuration_t;
 
 error_t i2c_read(i2c_handle_t handle, uint8_t *data, uint32_t size);
 error_t i2c_write(i2c_handle_t handle, uint8_t *data, uint32_t size);
-error_t i2c_open( i2c_handle_t *handle, i2c_device_t device);
+error_t i2c_open(i2c_handle_t *handle, i2c_configuration_t device);
+error_t i2c_close(i2c_handle_t handle);
 error_t i2c_init();
 error_t i2c_deinit();
 

@@ -138,6 +138,16 @@ void rcc_disable_rtc_clock()
     RCC->BDCR &= ~RCC_BDCR_RTCEN;
 }
 
+void rcc_enable_i2c1_clock()
+{
+    RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN;
+}
+
+void rcc_disable_i2c1_clock()
+{
+    RCC->APB1ENR1 &= ~RCC_APB1ENR1_I2C1EN;
+}
+
 void rcc_enable_i2c3_clock()
 {
     RCC->APB1ENR1 |= RCC_APB1ENR1_I2C3EN;
