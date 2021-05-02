@@ -2,6 +2,7 @@
 #define LOG_H
 
 #include <stdarg.h>
+#include <stdint.h>
 #include <error.h>
 
 #define LOG_MSG_MAX_LENGTH 512
@@ -20,6 +21,3 @@ uint8_t log_wait_for_input();
 void log_init();
 
 #endif
-
-
-

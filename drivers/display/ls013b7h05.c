@@ -49,7 +49,7 @@ error_t display_init()
         log_error(error, "Failed to configure CS pin");
         return error;
     }
-    
+
     error = gpio_write(cs_pin.port, cs_pin.pin, 0);
     if (error) {
         log_error(error, "Failed to write CS pin");
@@ -78,7 +78,7 @@ error_t display_init()
 error_t display_render()
 {
     error_t error;
-    
+
     // set Chip Select to high
     error = gpio_write(GPIOB, 7, 1);
     if (error) {
@@ -122,7 +122,7 @@ error_t display_render()
     if (error) {
         log_error(error, "Failed to disable device");
     }
-    
+
     return error;
 }
 
@@ -133,7 +133,7 @@ error_t display_draw_pixel(uint32_t x, uint32_t y, uint8_t value)
                   x, y, DISPLAY_WIDTH, DISPLAY_HEIGHT);
         return ERROR_INVALID;
     }
-    
+
     uint32_t byte = ((y * DISPLAY_WIDTH) + (x)) / 8;
     uint8_t bit = 7 - (x % 8);
 

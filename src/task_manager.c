@@ -5,6 +5,7 @@
 #include <time_app.h>
 #include <menu.h>
 #include <ATtui.h>
+#include <accel.h>
 #include <display.h>
 #include <terminal.h>
 #include <log.h>
@@ -27,7 +28,7 @@ task_t *task_manager_get_task_by_name(string_t name)
     if (name.error) {
         return (task_t *)0;
     }
-    
+
     task_t *task = 0;
     for (uint32_t i = 0; i < g_task_manager.task_count; i++) {
         if (string_is_equal(g_task_manager.task_list[i].name, name)) {
@@ -80,6 +81,7 @@ void task_manager_init()
     task_manager_add_task(string("Set Time"), &change_time);
     task_manager_add_task(string("Bootloader"), &bootloader_reboot);
     task_manager_add_task(string("ATtui"), &ATtui_application_start);
+    task_manager_add_task(string("accel"), &accel_application_start);
     // TODO: look for additional tasks to add in flash memory
 
     task_manager_start_task_by_name(string("Time"));
