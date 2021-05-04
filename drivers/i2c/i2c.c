@@ -54,8 +54,15 @@ static bool i2c_data_received()
 
 static bool i2c_ready_to_transmit()
 {
-    return I2C->ISR & I2C_ISR_TXE;
+    return I2C->ISR & I2C_ISR_TXIS;
 }
+
+/* static bool i2c_not_ready() */
+/* { */
+/*     return I2C->ISR & I2C_ISR_TC; */
+/* } */
+
+#define DELAY_TEST 176
 
 error_t i2c_read(i2c_handle_t handle, uint8_t *data, uint32_t size)
 {
@@ -72,36 +79,28 @@ error_t i2c_read(i2c_handle_t handle, uint8_t *data, uint32_t size)
     i2c_configuration_t i2c_device = g_i2c_devices[handle];
     uint32_t index = 0;
 
-    // Set CR2
-    //    - Addressing mode ADD10
-    //    - Slave address
-    //    - Transfer direction
-    //    - Number of bytes to be transfered
-    // Set start bit
-
     I2C->CR2 |= i2c_device.address_mode << I2C_CR2_ADD10_Pos;
     if (i2c_device.address_mode == I2C_ADDRESS_MODE_7BIT) {
         I2C->CR2 |= i2c_device.address << (I2C_CR2_SADD_Pos+1);
     } else {
         I2C->CR2 |= i2c_device.address << I2C_CR2_SADD_Pos;
     }
-    I2C->CR2 |= I2C_READ << I2C_CR2_RD_WRN_Pos;
+    I2C->CR2 |= I2C_CR2_RD_WRN;
     // TODO: Add capability to have over 256 bytes
-    //I2C->CR2 |= I2C_CR2_AUTOEND;
+    I2C->CR2 &= ~I2C_CR2_AUTOEND;
     I2C->CR2 |= (size & 0xFF) << I2C_CR2_NBYTES_Pos;
     I2C->CR2 |= I2C_CR2_START;
-
+    //for(uint32_t i = 0; i < DELAY_TEST; i++);
     // TODO: we definitely need a timeout here
     while (size) {
         if (!i2c_data_received()) {
-            //log_debug("No data receieved");
             continue;
         }
 
         data[index++] = I2C->RXDR;
         size--;
     }
-
+    I2C->CR2 |= I2C_CR2_STOP;
     return SUCCESS;
 }
 
@@ -120,25 +119,19 @@ error_t i2c_write(i2c_handle_t handle, uint8_t *data, uint32_t size)
     i2c_configuration_t i2c_device = g_i2c_devices[handle];
     uint32_t index = 0;
 
-    // Set CR2
-    //    - Addressing mode ADD10
-    //    - Slave address
-    //    - Transfer direction
-    //    - Number of bytes to be transfered
-    // Set start bit
-
     I2C->CR2 |= i2c_device.address_mode << I2C_CR2_ADD10_Pos;
     if (i2c_device.address_mode == I2C_ADDRESS_MODE_7BIT) {
         I2C->CR2 |= i2c_device.address << (I2C_CR2_SADD_Pos+1);
     } else {
         I2C->CR2 |= i2c_device.address << I2C_CR2_SADD_Pos;
     }
-    I2C->CR2 |= I2C_WRITE << I2C_CR2_RD_WRN_Pos;
+    I2C->CR2 &= ~I2C_CR2_RD_WRN;
     // TODO: Add capability to have over 256 bytes
-    //I2C->CR2 |= I2C_CR2_AUTOEND;
+    I2C->CR2 &= ~I2C_CR2_AUTOEND;
     I2C->CR2 |= size << I2C_CR2_NBYTES_Pos;
     I2C->CR2 |= I2C_CR2_START;
-    log_debug("CR2: %x", I2C->CR2);
+    //for(uint32_t i = 0; i < DELAY_TEST; i++);
+    //log_debug("WRITE CR2: %x", I2C->CR2);
     // TODO: we definitely need a timeout here
     while (index < size) {
         if (!i2c_ready_to_transmit()) {
@@ -147,8 +140,13 @@ error_t i2c_write(i2c_handle_t handle, uint8_t *data, uint32_t size)
 
         I2C->TXDR = data[index++];
     }
-
+    while ((I2C->ISR & I2C_ISR_TC) == 0);
     return SUCCESS;
+}
+
+error_t i2c_write_byte(i2c_handle_t handle, uint8_t data)
+{
+    return i2c_write(handle, &data, 1);
 }
 
 error_t i2c_open( i2c_handle_t *handle, i2c_configuration_t device)
@@ -205,7 +203,7 @@ error_t i2c_init()
     scl_pin.pin = I2C_SCL_PIN;
     scl_pin.mode = GPIO_MODE_ALT_FUNC;
     scl_pin.output_type = GPIO_OUTPUT_TYPE_OPEN_DRAIN;
-    scl_pin.output_speed = GPIO_OUTPUT_SPEED_LOW;
+    scl_pin.output_speed = GPIO_OUTPUT_SPEED_HIGH;
     scl_pin.pull_resistor = GPIO_PULL_RESISTOR_NONE;
     scl_pin.alternative_function = 4;
     error = gpio_configure_pin(scl_pin);
@@ -218,7 +216,7 @@ error_t i2c_init()
     sda_pin.pin = I2C_SDA_PIN;
     sda_pin.mode = GPIO_MODE_ALT_FUNC;
     sda_pin.output_type = GPIO_OUTPUT_TYPE_OPEN_DRAIN;
-    sda_pin.output_speed = GPIO_OUTPUT_SPEED_LOW;
+    sda_pin.output_speed = GPIO_OUTPUT_SPEED_HIGH;
     sda_pin.pull_resistor = GPIO_PULL_RESISTOR_NONE;
     sda_pin.alternative_function = 4;
     error = gpio_configure_pin(sda_pin);
