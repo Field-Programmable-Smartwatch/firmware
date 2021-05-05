@@ -57,12 +57,12 @@ static bool i2c_ready_to_transmit()
     return I2C->ISR & I2C_ISR_TXIS;
 }
 
-/* static bool i2c_not_ready() */
-/* { */
-/*     return I2C->ISR & I2C_ISR_TC; */
-/* } */
-
-#define DELAY_TEST 176
+error_t i2c_stop(i2c_handle_t handle)
+{
+    (void) handle;
+    I2C->CR2 |= I2C_CR2_STOP;
+    return SUCCESS;
+}
 
 error_t i2c_read(i2c_handle_t handle, uint8_t *data, uint32_t size)
 {
@@ -87,10 +87,8 @@ error_t i2c_read(i2c_handle_t handle, uint8_t *data, uint32_t size)
     }
     I2C->CR2 |= I2C_CR2_RD_WRN;
     // TODO: Add capability to have over 256 bytes
-    I2C->CR2 &= ~I2C_CR2_AUTOEND;
     I2C->CR2 |= (size & 0xFF) << I2C_CR2_NBYTES_Pos;
     I2C->CR2 |= I2C_CR2_START;
-    //for(uint32_t i = 0; i < DELAY_TEST; i++);
     // TODO: we definitely need a timeout here
     while (size) {
         if (!i2c_data_received()) {
@@ -100,8 +98,12 @@ error_t i2c_read(i2c_handle_t handle, uint8_t *data, uint32_t size)
         data[index++] = I2C->RXDR;
         size--;
     }
-    I2C->CR2 |= I2C_CR2_STOP;
     return SUCCESS;
+}
+
+error_t i2c_read_byte(i2c_handle_t handle, uint8_t *data)
+{
+    return i2c_read(handle, data, 1);
 }
 
 error_t i2c_write(i2c_handle_t handle, uint8_t *data, uint32_t size)
@@ -127,11 +129,10 @@ error_t i2c_write(i2c_handle_t handle, uint8_t *data, uint32_t size)
     }
     I2C->CR2 &= ~I2C_CR2_RD_WRN;
     // TODO: Add capability to have over 256 bytes
-    I2C->CR2 &= ~I2C_CR2_AUTOEND;
+    I2C->CR2 &= ~I2C_CR2_NBYTES;
     I2C->CR2 |= size << I2C_CR2_NBYTES_Pos;
     I2C->CR2 |= I2C_CR2_START;
-    //for(uint32_t i = 0; i < DELAY_TEST; i++);
-    //log_debug("WRITE CR2: %x", I2C->CR2);
+
     // TODO: we definitely need a timeout here
     while (index < size) {
         if (!i2c_ready_to_transmit()) {

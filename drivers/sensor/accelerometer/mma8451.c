@@ -19,6 +19,13 @@ error_t accelerometer_open(uint32_t *handle)
         return error;
     }
 
+    // Set active mode and low noise mode
+    uint8_t data[2];
+    data[0] = 0x2a;
+    data[1] = 0x01 | 0x4;
+    i2c_write(*handle, data, 2);
+    i2c_stop(*handle);
+
     return SUCCESS;
 }
 
@@ -30,61 +37,45 @@ error_t accelerometer_close(uint32_t handle)
 error_t accelerometer_read(uint32_t handle, uint32_t *x, uint32_t *y, uint32_t *z)
 {
     uint32_t value = 0;
+    *x = 0;
+    *y = 0;
+    *z = 0;
 
-    i2c_write_byte(handle, 0x0D);
-    i2c_read(handle, (uint8_t *)&value, 1);
-    log_debug("WHOAMI %x");
+    i2c_write_byte(handle, 0x1);
+    i2c_read_byte(handle, (uint8_t *)&value);
+    i2c_stop(handle);
+    *x |= value << 8;
     value = 0;
-    
-    /* i2c_write_byte(handle, 0x1); */
-    /* for(uint32_t i = 0; i < 100; i++); */
-    /* i2c_read(handle, (uint8_t *)&value, 1); */
-    /* log_debug("x msb: %x", value); */
-    /* value = 0; */
 
-    /* i2c_write_byte(handle, 0x2); */
-    /* i2c_read(handle, (uint8_t *)&value, 1); */
-    /* log_debug("x lsb: %x", value); */
-    /* value = 0; */
+    i2c_write_byte(handle, 0x2);
+    i2c_read_byte(handle, (uint8_t *)&value);
+    i2c_stop(handle);
+    *x |= value >> 2;
+    value = 0;
 
-    /* i2c_write_byte(handle, 0x3); */
-    /* i2c_read(handle, (uint8_t *)&value, 1); */
-    /* log_debug("y msb: %x", value); */
-    /* value = 0; */
+    i2c_write_byte(handle, 0x3);
+    i2c_read_byte(handle, (uint8_t *)&value);
+    i2c_stop(handle);
+    *y |= value << 8;
+    value = 0;
 
-    /* i2c_write_byte(handle, 0x4); */
-    /* i2c_read(handle, (uint8_t *)&value, 1); */
-    /* log_debug("y lsb: %x", value); */
-    /* value = 0; */
+    i2c_write_byte(handle, 0x4);
+    i2c_read_byte(handle, (uint8_t *)&value);
+    i2c_stop(handle);
+    *y |= value >> 2;
+    value = 0;
 
-    /* i2c_write_byte(handle, 0x5); */
-    /* i2c_read(handle, (uint8_t *)&value, 1); */
-    /* log_debug("z msb: %x", value); */
-    /* value = 0; */
+    i2c_write_byte(handle, 0x5);
+    i2c_read_byte(handle, (uint8_t *)&value);
+    i2c_stop(handle);
+    *z |= value << 8;
+    value = 0;
 
-    /* i2c_write_byte(handle, 0x6); */
-    /* i2c_read(handle, (uint8_t *)&value, 1); */
-    /* log_debug("z lsb: %x", value); */
-    /* value = 0; */
-    
-    //i2c_write(handle, &out_x_msb_register_addr, 1);
-    /* *x = value << 8; */
-    /* i2c_read(handle, (uint8_t *)&value, 8); */
-    /* *x |= value >> 2; */
-    /* log_debug("c"); */
-
-    /* i2c_read(handle, &value, 8); */
-    /* *y = value << 8; */
-    /* i2c_read(handle, &value, 8); */
-    /* *y |= value >> 2; */
-    /* log_debug("d"); */
-
-    /* i2c_read(handle, &value, 8); */
-    /* *z = value << 8; */
-    /* i2c_read(handle, &value, 8); */
-    /* *z |= value >> 2; */
-    /* log_debug("e"); */
-    while(1);
+    i2c_write_byte(handle, 0x6);
+    i2c_read_byte(handle, (uint8_t *)&value);
+    i2c_stop(handle);
+    *z |= value >> 2;
+    value = 0;
 
     return SUCCESS;
 }

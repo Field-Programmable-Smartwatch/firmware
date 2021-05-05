@@ -5,6 +5,7 @@
 #include <task_manager.h>
 #include <event_handler.h>
 #include <accelerometer.h>
+#include <systick_timer.h>
 
 
 void accel_application_start()
@@ -38,7 +39,7 @@ void accel_application_start()
             break;
         }
 
-        log(LOG_LEVEL_INFO, "x:%u y:%u z:%u\r\n", x, y, z);
+        log(LOG_LEVEL_INFO, "fx:%u y:%u z:%u\r\n", x, y, z);
     }
 
     task->status = TASK_STATUS_STOP;

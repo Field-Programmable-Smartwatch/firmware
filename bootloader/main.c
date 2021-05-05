@@ -12,6 +12,7 @@
 #include <error.h>
 #include <i2c.h>
 #include <accelerometer.h>
+#include <systick_timer.h>
 
 #define KERNEL_START_ADDR 0x20002000
 #define KERNEL_SIZE_IN_BLOCKS 35
@@ -86,41 +87,24 @@ void bootloader_main()
     log_init();
     log_debug("Bootloader Start");
 
+    systick_timer_init();
+    systick_timer_start();
+
     i2c_init();
 
     error = accelerometer_open(&accelerometer_handle);
     if (error) {
         log_error(error, "Failed to open accelerometer device");
     }
-    log_debug("1");
     while (1) {
-        log_debug("2");
         error = accelerometer_read(accelerometer_handle, &x, &y, &z);
         if (error) {
             log_error(error, "Failed to read from accelerometer");
             break;
         }
-        log_debug("5");
         log(LOG_LEVEL_INFO, "x:%u y:%u z:%u\r\n", x, y, z);
+        systick_timer_wait_ms(1000);
     }
-    /* error = spi_init(); */
-    /* if (error) { */
-    /*     log_error(error, "Failed to initialize spi\r\n"); */
-    /*     while(1); */
-    /* } */
-    /* log_debug("Bootloader initialized SPI"); */
-
-    /* error = sdcard_init(); */
-    /* if (error) { */
-    /*     log_error(error, "Failed to initialize sdcard\r\n"); */
-    /*     while(1); */
-    /* } */
-    /* log_debug("Bootloader initialized SDcard"); */
-
-    /* elf_load(); */
-    /* log_debug("Bootloader loaded kernel into RAM"); */
-    /* log_debug("Bootloader jumping to kernel main"); */
-    /* jump_to_kernel_main(); */
 }
 
 void __attribute__((naked)) Reset_Handler()

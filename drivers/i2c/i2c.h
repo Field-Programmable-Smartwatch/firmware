@@ -18,7 +18,10 @@ typedef struct i2c_configuration {
     uint16_t address;
 } i2c_configuration_t;
 
+
+error_t i2c_stop(i2c_handle_t handle);
 error_t i2c_read(i2c_handle_t handle, uint8_t *data, uint32_t size);
+error_t i2c_read_byte(i2c_handle_t handle, uint8_t *data);
 error_t i2c_write(i2c_handle_t handle, uint8_t *data, uint32_t size);
 error_t i2c_write_byte(i2c_handle_t handle, uint8_t data);
 error_t i2c_open(i2c_handle_t *handle, i2c_configuration_t device);
