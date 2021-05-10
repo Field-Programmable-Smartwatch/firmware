@@ -20,7 +20,7 @@ static void log_print(char *format, va_list ap)
     if (!format) {
         return;
     }
-    
+
     char msg_data[LOG_MSG_MAX_LENGTH];
     string_t msg = string_init(msg_data, 0, LOG_MSG_MAX_LENGTH);
     string_t format_string = string(format);
@@ -52,7 +52,7 @@ void log_error(error_t error, char *format, ...)
     }
 
     va_list ap;
-    
+
     log(LOG_LEVEL_ERROR, "ERROR %s [%s]: ", string((char *)__func__), string((char *)error_get_message(error)));
     va_start(ap, format);
     log_print(format, ap);
@@ -67,8 +67,8 @@ void log_info(char *format, ...)
     }
 
     va_list ap;
-    
-    log(LOG_LEVEL_INFO, "INFO %s: ", __func__);
+
+    log(LOG_LEVEL_INFO, "INFO %s: ", string((char *)__func__));
     va_start(ap, format);
     log_print(format, ap);
     va_end(ap);
@@ -83,7 +83,7 @@ void log_debug(char *format, ...)
 
     va_list ap;
 
-    log(LOG_LEVEL_DEBUG, "DEBUG %s: ", __func__);
+    log(LOG_LEVEL_DEBUG, "DEBUG %s: ", string((char *)__func__));
     va_start(ap, format);
     log_print(format, ap);
     va_end(ap);

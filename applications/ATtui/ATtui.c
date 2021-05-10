@@ -50,7 +50,7 @@ void ATtui_application_start()
 
     memory_set(command, 0, ATtui_COMMAND_MAX);
     memory_set(response, 0, ATtui_RESPONSE_MAX);
-    
+
     log(LOG_LEVEL_INFO, "> ");
     while (task->status == TASK_STATUS_RUNNING) {
         uint8_t c = log_wait_for_input();
@@ -79,7 +79,7 @@ void ATtui_application_start()
             command_length = 0;
             systick_timer_wait_ms(50);
             ATtui_get_response(response, ATtui_RESPONSE_MAX);
-            log(LOG_LEVEL_INFO, "\r\n%s\r\n> ", response);
+            log(LOG_LEVEL_INFO, "\r\n%s\r\n> ", string((char *)response));
 
         } else if (command_length < ATtui_COMMAND_MAX - 1 &&
                    (c >= 32 && c <= 126)) { // Character key pressed
