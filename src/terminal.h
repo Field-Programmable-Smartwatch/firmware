@@ -2,7 +2,7 @@
 #define TERMINAL_H
 
 #include <stdint.h>
-#include <string.h>
+#include <libraries/string.h>
 
 typedef struct terminal_cursor {
     uint32_t x;

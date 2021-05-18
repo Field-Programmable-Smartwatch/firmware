@@ -1,10 +1,9 @@
 #include <ATtui.h>
-#include <task_manager.h>
-#include <log.h>
-#include <bluefruit.h>
-#include <string.h>
-#include <sdep.h>
-#include <systick_timer.h>
+#include <kernel/task/task_manager.h>
+#include <kernel/debug/log.h>
+#include <drivers/ble/bluefruit.h>
+#include <libraries/string.h>
+#include <mcu/system_timer.h>
 
 #define ATtui_COMMAND_MAX 128
 #define ATtui_RESPONSE_MAX 256
@@ -15,7 +14,7 @@ static int32_t ATtui_send_uart(uint8_t *message, uint32_t size)
     for (uint8_t i = 0; i < size; i++) {
         command[13] = message[i];
         bluefruit_write(command, 14);
-        systick_timer_wait_ms(50);
+        system_timer_wait_ms(50);
     }
     return 0;
 }
@@ -24,7 +23,7 @@ static int32_t ATtui_recv_uart()
 {
     uint8_t command[16] = "at+bleuartrx";
     bluefruit_write(command, 12);
-    systick_timer_wait_ms(50);
+    system_timer_wait_ms(50);
     return 0;
 }
 
@@ -36,7 +35,7 @@ static int32_t ATtui_send_command(uint8_t *command, uint32_t size)
 
 static int32_t ATtui_get_response(uint8_t *response, uint32_t size)
 {
-    memory_set(response, 0, size);
+    memset(response, 0, size);
     bluefruit_read(response, size);
     return 0;
 }
@@ -48,8 +47,8 @@ void ATtui_application_start()
     uint8_t response[ATtui_RESPONSE_MAX];
     task_t *task = task_manager_get_task_by_name(string("ATtui"));
 
-    memory_set(command, 0, ATtui_COMMAND_MAX);
-    memory_set(response, 0, ATtui_RESPONSE_MAX);
+    memset(command, 0, ATtui_COMMAND_MAX);
+    memset(response, 0, ATtui_RESPONSE_MAX);
 
     log(LOG_LEVEL_INFO, "> ");
     while (task->status == TASK_STATUS_RUNNING) {
@@ -63,21 +62,21 @@ void ATtui_application_start()
             log(LOG_LEVEL_INFO, "\b \b");
 
         } else if (c == '\r') { // Enter key pressed
-            if (memory_is_equal(command, "exit", 4)) { // Exit command
+            if (memcmp(command, "exit", 4) == 0) { // Exit command
                 task->status = TASK_STATUS_STOP;
                 task_manager_start_task_by_name(string("Menu"));
                 break;
-            } else if (memory_is_equal(command, "send", 4)) { // Send command
+            } else if (memcmp(command, "send", 4) == 0) { // Send command
                 ATtui_send_uart(command+5, command_length-5);
 
-            } else if (memory_is_equal(command, "recv", 4)) { // recv command
+            } else if (memcmp(command, "recv", 4) == 0) { // recv command
                 ATtui_recv_uart();
 
             } else {
                 ATtui_send_command(command, command_length);
             }
             command_length = 0;
-            systick_timer_wait_ms(50);
+            system_timer_wait_ms(50);
             ATtui_get_response(response, ATtui_RESPONSE_MAX);
             log(LOG_LEVEL_INFO, "\r\n%s\r\n> ", string((char *)response));
 

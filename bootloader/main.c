@@ -1,15 +1,15 @@
-#include <stm32wb55xx.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
-#include <gpio.h>
-#include <lpuart.h>
-#include <log.h>
-#include <spi.h>
-#include <rcc.h>
-#include <sdcard.h>
-#include <elf32.h>
-#include <error.h>
+#include <stm32wb55xx.h>
+#include <stm32wb55xx/gpio.h>
+#include <stm32wb55xx/lpuart.h>
+#include <stm32wb55xx/spi.h>
+#include <stm32wb55xx/rcc.h>
+#include <drivers/memory/sdcard.h>
+#include <kernel/debug/log.h>
+#include <libraries/error.h>
+#include <libraries/string.h>
+#include "elf32.h"
 
 #define KERNEL_START_ADDR 0x20002000
 #define KERNEL_SIZE_IN_BLOCKS 35
@@ -50,11 +50,11 @@ void load_kernel()
 {
     uint8_t block[512];
 
-    memory_set(block , 0, 512);
+    memset(block , 0, 512);
     uint8_t *addr = (uint8_t *)(KERNEL_START_ADDR);
     for (uint32_t i = 0; i < KERNEL_SIZE_IN_BLOCKS; i++) {
         sdcard_read_block(i, block);
-        memory_copy(addr, block, 512);
+        memcpy(addr, block, 512);
         addr += 512;
     }
 }
@@ -72,25 +72,84 @@ void bootloader_main()
     }
 
     error_t error;
-    
+    lpuart_handle_t lpuart_handle;
+    sdcard_configuration_t sdcard_device;
+
     __enable_irq();
 
-    lpuart_init();
-    log_init();
+    rcc_enable_lpuart1_clock();
+    rcc_enable_spi1_clock();
+    rcc_enable_gpioa_clock();
+    rcc_enable_gpiob_clock();
+
+    // Initialize lpuart interface
+    lpuart_init((lpuart_configuration_t)
+                {.lpuart = LPUART1,
+                 .rx_port = GPIOA,
+                 .rx_pin = 3,
+                 .tx_port = GPIOA,
+                 .tx_pin = 2,
+                 .clock_source = RCC_LPUART_CLOCK_SOURCE_SYSCLK,
+                 .word_length = LPUART_WORD_LENGTH_8,
+                 .baud_rate_prescaler = 0x8ae3,
+                 .stop_bits = LPUART_STOP_BITS_1},
+                &lpuart_handle);
+
+    // Initialize log
+    log_init((log_configuration_t)
+             {.lpuart_handle = lpuart_handle});
+
     log_debug("Bootloader Start");
 
-    error = spi_init();
+    // Initialize spi interface
+    error = spi_interface_init((spi_interface_configuration_t)
+                               {.sck_port = GPIOA,
+                                .sck_pin = 5,
+                                .miso_port = GPIOA,
+                                .miso_pin = 6,
+                                .mosi_port = GPIOA,
+                                .mosi_pin = 7});
     if (error) {
-        log_error(error, "Failed to initialize spi\r\n");
+        log_error(error, "Failed to initialize spi interface");
         while(1);
     }
+
     log_debug("Bootloader initialized SPI");
 
-    error = sdcard_init();
+    // Initialize SDcard device
+    error = gpio_configure_pin((gpio_configuration_t)
+                               {.port = GPIOB,
+                                .pin = 6,
+                                .mode = GPIO_MODE_OUTPUT,
+                                .output_type = GPIO_OUTPUT_TYPE_PUSH_PULL,
+                                .output_speed = GPIO_OUTPUT_SPEED_LOW,
+                                .pull_resistor = GPIO_PULL_RESISTOR_NONE},
+                               &sdcard_device.cs_pin_handle);
+    if (error) {
+        log_error(error, "Failed to configure CS pin for SDcard");
+        while(1);
+    }
+    error = spi_device_init((spi_device_configuration_t)
+                            {.spi = SPI1,
+                             .clock_mode = SPI_CLOCK_MODE_0,
+                             .mode = SPI_MODE_MASTER,
+                             .baud_rate_prescaler = SPI_BAUD_RATE_PRESCALER_64,
+                             .significant_bit = SPI_SIGNIFICANT_BIT_MSB,
+                             .com_mode =  SPI_COM_MODE_FULL_DUPLEX,
+                             .data_size = SPI_DATA_SIZE_8BIT},
+                            &sdcard_device.spi_handle);
+    if (error) {
+        log_error(error, "Failed to initialize SPI device for SDcard");
+        while(1);
+    }
+
+    error = sdcard_init(sdcard_device);
+
     if (error) {
         log_error(error, "Failed to initialize sdcard\r\n");
         while(1);
     }
+
     log_debug("Bootloader initialized SDcard");
 
     elf_load();
@@ -106,11 +165,11 @@ void __attribute__((naked)) Reset_Handler()
 
     // Copy data section from flash memory to ram
     uint32_t data_section_size = _edata - _sdata;
-    memory_copy(_sdata, _sidata, data_section_size*4);
+    memcpy(_sdata, _sidata, data_section_size*4);
 
     // Zero out bss
     uint32_t bss_section_size = _ebss - _sbss;
-    memory_set(_sbss, 0, bss_section_size*4);
+    memset(_sbss, 0, bss_section_size*4);
 
     // Set Interrupt Vector Table Offset
     SCB->VTOR = (uint32_t)interrupt_vector_table;

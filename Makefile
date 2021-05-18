@@ -1,26 +1,16 @@
-CROSS_PATH = ../compiler/cross/bin/
-CROSS_PREFIX = $(CROSS_PATH)arm-none-eabi-
-GCC = $(CROSS_PREFIX)gcc
-LD = $(CROSS_PREFIX)ld
-OBJCOPY =$(CROSS_PREFIX)objcopy
+include config.mk
 
-CPU = cortex-m4
-INCLUDE = -Iinclude -Ilibraries -Isrc -Ibootloader \
-          $(foreach inc_path, $(wildcard drivers/*), -I$(inc_path)) \
+INCLUDE = -I$(PWD) -Isrc -Ibootloader -I$(SEAMOS_PATH) -I$(SEAMOS_PATH)/mcu/$(MCU)/include \
           $(foreach inc_path, $(wildcard applications/*), -I$(inc_path))
-CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=$(CPU) $(INCLUDE) \
+CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -nolibc -mcpu=$(CPU) $(INCLUDE) \
          -DLOG_LEVEL=LOG_LEVEL_INFO -MMD -MF $(DEPDIR)/$*.d
 LDFLAGS = --omagic -static
 
 DEPDIR = .deps/
 
-BOOTLOADER_SOURCE = $(wildcard drivers/*/*.c) \
-                    $(wildcard bootloader/*.c) \
-                    $(wildcard libraries/*.c)
+BOOTLOADER_SOURCE = $(wildcard bootloader/*.c)
 
-SOURCE = $(wildcard drivers/*/*.c) \
-         $(wildcard src/*.c) \
-         $(wildcard libraries/*.c) \
+SOURCE = $(wildcard src/*.c) \
          $(wildcard applications/*/*.c) \
 
 BOOTLOADER_OBJECTS = $(patsubst %.c,%.o,$(BOOTLOADER_SOURCE))
@@ -33,6 +23,10 @@ DEPENDS = $(patsubst %.c,$(DEPDIR)/%.d,$(BOOTLOADER_SOURCE)) \
 
 all: bootloader.bin fpsw.bin
 
+.PHONY: $(SEAMOS_LIB)
+$(SEAMOS_LIB):
+	$(MAKE) -C $(SEAMOS_PATH)
+
 %.d:
 	@mkdir -p $(@D)
 
@@ -42,11 +36,11 @@ all: bootloader.bin fpsw.bin
 %.o: %.c Makefile
 	$(GCC) $(CFLAGS) -o $@ $<
 
-fpsw.elf: $(OBJECTS) linker.ld
-	$(LD) $(LDFLAGS) -T linker.ld -o $@ $(OBJECTS)
+fpsw.elf: $(SEAMOS_LIB) $(OBJECTS) linker.ld
+	$(LD) $(LDFLAGS) -T linker.ld -o $@ $(OBJECTS) $(SEAMOS_LIB)
 
-bootloader.elf: $(BOOTLOADER_OBJECTS) bootloader-linker.ld
-	$(LD) $(LDFLAGS) -T bootloader-linker.ld -o $@ $(BOOTLOADER_OBJECTS)
+bootloader.elf: $(SEAMOS_LIB) $(BOOTLOADER_OBJECTS) bootloader-linker.ld
+	$(LD) $(LDFLAGS) -T bootloader-linker.ld -o $@ $(BOOTLOADER_OBJECTS) $(SEAMOS_LIB)
 
 %.bin: %.elf
 	$(OBJCOPY) $^ -O binary $@
@@ -62,6 +56,7 @@ flash-%:
 
 .PHONY: clean
 clean:
-	rm -rf $(DEPDIR) $(BOOTLOADER_OBJECTS) $(OBJECTS) *.elf *.bin
+	rm -rf $(DEPDIR) $(BOOTLOADER_OBJECTS) $(OBJECTS) *.elf *.bin *.a
+	$(MAKE) -C $(SEAMOS_PATH) clean
 
 include $(DEPENDS)

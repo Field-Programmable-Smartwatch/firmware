@@ -1,8 +1,8 @@
-#include <terminal.h>
-#include <stdarg.h> 
-#include <display.h>
-#include <string.h>
-#include <log.h>
+#include <stdarg.h>
+#include <drivers/display/ls013b7h05.h>
+#include <libraries/string.h>
+#include <kernel/debug/log.h>
+#include "terminal.h"
 
 #define MSG_MAX_LENGTH 256
 
@@ -49,10 +49,10 @@ static void terminal_print_char(char c)
     }
 
     uint8_t *glyph = terminal.font_bitmap + (c * terminal.font_header->height);
-    display_draw_bitmap(terminal.cursor.x * terminal.font_header->width,
-                        terminal.cursor.y * terminal.font_header->height,
-                        terminal.font_header->width, terminal.font_header->height,
-                        glyph);
+    ls013b7h05_draw_bitmap(terminal.cursor.x * terminal.font_header->width,
+                           terminal.cursor.y * terminal.font_header->height,
+                           terminal.font_header->width, terminal.font_header->height,
+                           glyph);
     terminal.cursor.x++;
 }
 

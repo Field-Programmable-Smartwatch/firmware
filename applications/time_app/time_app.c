@@ -1,16 +1,16 @@
-#include <stm32wb55xx.h>
-#include <time_app.h>
-#include <time.h>
-#include <event_handler.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <display.h>
+#include <stm32wb55xx.h>
+#include <stm32wb55xx/rtc.h>
+#include <libraries/time.h>
+#include <libraries/string.h>
+#include <kernel/event/event_handler.h>
+#include <kernel/debug/log.h>
+#include <kernel/task/task_manager.h>
+#include <drivers/display/ls013b7h05.h>
 #include <terminal.h>
-#include <log.h>
-#include <menu.h>
-#include <task_manager.h>
-#include <string.h>
-#include <rtc.h>
+#include <key_map.h>
+#include "time_app.h"
 
 char *weekdays[] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 char *months[] = {"January", "February", "March", "April", "May", "June",
@@ -23,7 +23,7 @@ void draw_time(datetime_t *datetime)
     terminal_print_at(5, 5, string("%02u:%02u.%02u"), datetime->hours, datetime->minutes, datetime->seconds);
 }
 
-void change_time()
+void set_time_application_start(void *app_data)
 {
     task_t *task = task_manager_get_task_by_name(string("Set Time"));
     uint8_t select_button_count = 0;
@@ -32,10 +32,10 @@ void change_time()
     datetime_t datetime;
 
     rtc_get_date_and_time(&datetime);
-    display_clear();
+    ls013b7h05_clear();
     draw_time(&datetime);
     terminal_print_at(0, 0, string("Changing hours"));
-    display_render();
+    ls013b7h05_render();
 
     while (task->status == TASK_STATUS_RUNNING) {
         asm("wfi");
@@ -97,7 +97,7 @@ void change_time()
                         }
                     }
                 }
-            }            
+            }
         }
 
         if (time_changed) {
@@ -111,21 +111,21 @@ void change_time()
             if (select_button_count == 2) {
                 terminal_print_at(0, 0, string("Changing seconds"));
             }
-            display_render();
+            ls013b7h05_render();
         }
     }
 }
 
-void time_application_start()
+void time_application_start(void *app_data)
 {
     log_debug("Starting time_app");
     task_t *task = task_manager_get_task_by_name(string("Time"));
     event_queue_t event_queue;
     datetime_t datetime;
     rtc_get_date_and_time(&datetime);
-    display_clear();
+    ls013b7h05_clear();
     draw_time(&datetime);
-    display_render();
+    ls013b7h05_render();
     while (task->status == TASK_STATUS_RUNNING) {
         asm("wfi");
         event_queue = event_handler_poll();
@@ -150,6 +150,6 @@ void time_application_start()
         }
         rtc_get_date_and_time(&datetime);
         draw_time(&datetime);
-        display_render();
+        ls013b7h05_render();
     }
 }

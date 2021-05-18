@@ -1,12 +1,12 @@
 #include <stdint.h>
-#include <string.h>
-#include <event_handler.h>
-#include <display.h>
 #include <terminal.h>
-#include <log.h>
-#include <menu.h>
-#include <time.h>
-#include <task_manager.h>
+#include <libraries/string.h>
+#include <kernel/event/event_handler.h>
+#include <kernel/task/task_manager.h>
+#include <kernel/debug/log.h>
+#include <drivers/display/ls013b7h05.h>
+#include <applications/menu/menu.h>
+#include <key_map.h>
 
 #define MENU_ITEM_MAX 4
 
@@ -17,10 +17,10 @@ static void draw_menu()
 {
     for (uint32_t i = 0; i < MENU_ITEM_MAX; i++) {
         if (g_menu_selection == i) {
-            display_set_draw_attr(DISPLAY_DRAW_ATTR_INVERT);
+            ls013b7h05_set_draw_attr(DISPLAY_DRAW_ATTR_INVERT);
         }
         terminal_print_at(0, i, g_menu_items[i].name);
-        display_set_draw_attr(DISPLAY_DRAW_ATTR_NORMAL);
+        ls013b7h05_set_draw_attr(DISPLAY_DRAW_ATTR_NORMAL);
     }
 }
 
@@ -56,9 +56,9 @@ void menu_application_start()
     task_t *menu_task = task_manager_get_task_by_name(string("Menu"));
     event_queue_t event_queue;
     menu_set_menu_items();
-    display_clear();
+    ls013b7h05_clear();
     draw_menu();
-    display_render();
+    ls013b7h05_render();
     while (menu_task->status == TASK_STATUS_RUNNING) {
         bool selection_changed = false;
         event_queue = event_handler_poll();
@@ -69,16 +69,16 @@ void menu_application_start()
                     if (g_menu_selection == 0) {
                         continue;
                     }
-                    
+
                     g_menu_selection--;
                     selection_changed = true;
                 }
-                
+
                 if (event.id == ID_BUTTON_SELECT) {
                     menu_task->status = TASK_STATUS_STOP;
                     task_manager_start_task_by_name(g_menu_items[g_menu_selection].name);
                 }
-                
+
                 if (event.id == ID_BUTTON_DOWN) {
                     if (g_menu_selection == MENU_ITEM_MAX - 1) {
                         continue;
@@ -91,7 +91,7 @@ void menu_application_start()
         }
         if (selection_changed) {
             draw_menu();
-            display_render();
+            ls013b7h05_render();
         }
     }
 }

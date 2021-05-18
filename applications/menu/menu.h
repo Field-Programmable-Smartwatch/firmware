@@ -1,9 +1,13 @@
 #ifndef MENU_H
 #define MENU_H
 
-#include <string.h>
+#include <libraries/string.h>
 
 #define MENU_ITEM_NAME_MAX 16
+
+typedef struct menu_app_data {
+    int placeholder;
+} menu_app_data_t;
 
 typedef struct menu_item {
     char name_data[MENU_ITEM_NAME_MAX];
