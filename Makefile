@@ -1,67 +1,70 @@
-CROSS_PATH = ../compiler/cross/bin/
-CROSS_PREFIX = $(CROSS_PATH)arm-none-eabi-
-GCC = $(CROSS_PREFIX)gcc
-LD = $(CROSS_PREFIX)ld
-OBJCOPY =$(CROSS_PREFIX)objcopy
+export MCU = stm32wb55xx
+export SEAMOS_LIB = $(PWD)/SeamOS.a
+export CONFIG = $(PWD)/kernel/config
+SEAMOS_PATH = ../../
+GCC = $(COMPILER)gcc
+LD = $(COMPILER)ld
+OBJCOPY = $(COMPILER)objcopy
 
-CPU = cortex-m4
-INCLUDE = -Iinclude -Ilibraries -Isrc -Ibootloader \
-          $(foreach inc_path, $(wildcard drivers/*), -I$(inc_path)) \
-          $(foreach inc_path, $(wildcard applications/*), -I$(inc_path))
-CFLAGS = -Wall -Werror -c -ffreestanding -nostdlib -mcpu=$(CPU) $(INCLUDE) \
-         -DLOG_LEVEL=LOG_LEVEL_INFO -MMD -MF $(DEPDIR)/$*.d
-LDFLAGS = --omagic -static
+include $(SEAMOS_PATH)/mcu/$(MCU)/config.mk
+
+INCLUDE = -I$(SEAMOS_PATH) -I$(SEAMOS_PATH)/mcu/$(MCU)/include -I$(PWD)
+CFLAGS ?= -Wall -Werror -c -ffreestanding -nostdlib $(MCU_CFLAGS) $(INCLUDE) -g \
+          -DLOG_LEVEL=$(CONFIG_LOG_LEVEL) -MMD -MF $(DEPDIR)/$*.d
+LDFLAGS ?= --omagic -static
 
 DEPDIR = .deps/
 
-BOOTLOADER_SOURCE = $(wildcard drivers/*/*.c) \
-                    $(wildcard bootloader/*.c) \
-                    $(wildcard libraries/*.c)
+KERNEL_LINKER_SCRIPT = ./kernel/linker.ld
+KERNEL_SOURCE = $(wildcard ./kernel/*.c) $(wildcard ./kernel/tasks/*.c)
+KERNEL_OBJECTS = $(patsubst %.c,%.o,$(KERNEL_SOURCE))
 
-SOURCE = $(wildcard drivers/*/*.c) \
-         $(wildcard src/*.c) \
-         $(wildcard libraries/*.c) \
-         $(wildcard applications/*/*.c) \
+LIB_SOURCE = $(wildcard ./libraries/*.c) $(wildcard $(SEAMOS_PATH)/libraries/*.c)
+LIB_OBJECTS = $(patsubst %.c,%.o,$(LIB_SOURCE))
 
-BOOTLOADER_OBJECTS = $(patsubst %.c,%.o,$(BOOTLOADER_SOURCE))
+APP_LINKER_SCRIPT = ./applications/linker.ld
+HELLO_APP_SOURCE = $(wildcard ./applications/hello_world/*.c)
+HELLO_APP_OBJECTS = $(patsubst %.c,%.o,$(HELLO_APP_SOURCE))
 
-OBJECTS = $(patsubst %.c,%.o,$(SOURCE)) cp850-8x16.o
+DEPENDS = $(patsubst %.c,$(DEPDIR)/%.d,$(KERNEL_SOURCE)) \
+          $(patsubst %.c,$(DEPDIR)/%.d,$(LIB_SOURCE)) \
+          $(patsubst %.c,$(DEPDIR)/%.d,$(HELLO_APP_SOURCE))
 
-DEPENDS = $(patsubst %.c,$(DEPDIR)/%.d,$(BOOTLOADER_SOURCE)) \
-          $(patsubst %.c,$(DEPDIR)/%.d,$(SOURCE))
+.SECONDARY: os.elf lib.elf hello_app.elf
+all: kernel.bin lib.a hello_app.bin
 
-
-all: bootloader.bin fpsw.bin
+.PHONY: $(SEAMOS_LIB)
+$(SEAMOS_LIB):
+	$(MAKE) -C $(SEAMOS_PATH)
 
 %.d:
 	@mkdir -p $(@D)
 
-%.o: %.psfu
-	$(OBJCOPY) -O elf32-littlearm -B arm -I binary $^ $@
-
 %.o: %.c Makefile
 	$(GCC) $(CFLAGS) -o $@ $<
 
-fpsw.elf: $(OBJECTS) linker.ld
-	$(LD) $(LDFLAGS) -T linker.ld -o $@ $(OBJECTS)
+kernel.elf: $(SEAMOS_LIB) $(KERNEL_OBJECTS) $(OS_LINKER_SCRIPT)
+	$(LD) $(LDFLAGS) -T $(KERNEL_LINKER_SCRIPT) -o $@ $(KERNEL_OBJECTS) $(SEAMOS_LIB)
 
-bootloader.elf: $(BOOTLOADER_OBJECTS) bootloader-linker.ld
-	$(LD) $(LDFLAGS) -T bootloader-linker.ld -o $@ $(BOOTLOADER_OBJECTS)
+lib.a: $(LIB_OBJECTS)
+	$(AR) -rc $@ $^
+
+hello_app.elf: $(HELLO_APP_OBJECTS) lib.a $(APP_LINKER_SCRIPT)
+	$(LD) $(LDFLAGS) -T $(APP_LINKER_SCRIPT) -o $@ $(HELLO_APP_OBJECTS) lib.a
 
 %.bin: %.elf
 	$(OBJCOPY) $^ -O binary $@
 
-.PHONY: dd
-dd:
-	sudo dd if=fpsw.elf of=$(DEV) bs=512
-	sudo rm $(DEV) # It seems I have to do this due to some linux bug
-
-.PHONY: flash-%
-flash-%:
-	dfu-util -a 0 -i 0 -s 0x08000000:leave -D $*.bin
-
 .PHONY: clean
 clean:
-	rm -rf $(DEPDIR) $(BOOTLOADER_OBJECTS) $(OBJECTS) *.elf *.bin
+	rm -rf $(DEPDIR) $(KERNEL_OBJECTS) $(LIB_OBJECTS) $(HELLO_APP_OBJECTS) *.bin *.elf *.a
+
+.PHONY: flash_kernel
+flash_kernel:
+	dfu-util -a 0 -i 0 -s 0x08000000:leave -D kernel.bin
+
+.PHONY:flash_app
+flash_app:
+	dfu-util -a 0 -i 0 -s 0x08010000:leave -D hello_app.bin
 
 include $(DEPENDS)
