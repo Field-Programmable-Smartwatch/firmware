@@ -1,0 +1,37 @@
+* Firmware
+This repository contains source code for the firmware and application
+code foir the Field-Programmable Smartwatch project.
+
+** Directory Structure
+#+BEGIN_SRC
+applications/ Contains the application code that get executed from kernel space.
+
+common/       Contains code that both application space and kernel space use.
+
+kernel/       Contains kernel code that handles initializing the MCU, initializing the various
+              tasks, and initializing/starting the task manager.
+
+libraries/    Contains code that is utilized within various application code
+#+END_SRC
+
+** How To Build
+First, you will need an ARM cross compiler. Please follow the
+instructions [[https://github.com/Field-Programmable-Smartwatch/compiler][here]] to build your own cross compiler.
+
+#+BEGIN_SRC
+make COMPILER=[COMPILER PATH] SEAMOS_PATH=[SEAMOS PATH]
+#+END_SRC
+
+** How to Flash the bootloader to the smartwatch
+Reset the STM32 board while the boot pin is high. Then connect the
+device to the computer via USB and run the following command:
+
+#+BEGIN_SRC
+make flash_kernel
+#+END_SRC
+
+Follow the same steps detailed above and run the following command
+
+#+BEGIN_SRC
+make flash_app
+#+END_SRC
