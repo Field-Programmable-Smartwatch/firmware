@@ -16,5 +16,9 @@ void system_call(system_call_t system_call, void *args)
     case SYSTEM_CALL_GET_INPUT_EVENT:
         asm_svc(SYSTEM_CALL_GET_INPUT_EVENT, r0);
         break;
+
+    case SYSTEM_CALL_RENDER:
+        asm_svc(SYSTEM_CALL_RENDER, r0);
+        break;
     }
 }

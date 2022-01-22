@@ -1,7 +1,9 @@
 #include <kernel/system.h>
 #include <kernel/tasks/input_task.h>
+#include <kernel/tasks/display_task.h>
 #include <kernel/debug/log.h>
 #include <common/log_message.h>
+#include <common/render_request.h>
 
 static void system_call_handle_log(log_message_t *message)
 {
@@ -33,6 +35,10 @@ void system_call_handler(uint32_t system_call, uint32_t *system_call_args)
 
     case 2:
         input_task_get_event((input_event_t *)system_call_args[0]);
+        break;
+
+    case 3:
+        display_task_queue_request((render_request_t *)system_call_args[0]);
         break;
     }
 }

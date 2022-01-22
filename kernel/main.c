@@ -10,6 +10,7 @@
 #include <libraries/string.h>
 #include <kernel/tasks/app_task.h>
 #include <kernel/tasks/input_task.h>
+#include <kernel/tasks/display_task.h>
 
 extern uint32_t _estack[];
 extern uint32_t _sidata[];
@@ -73,13 +74,9 @@ static error_t init_mcu()
         return error;
     }
 
-    return SUCCESS;
-}
-
-static error_t init_log()
-{
     log_init((log_configuration_t)
              {.lpuart_handle = g_lpuart_handle});
+
     return SUCCESS;
 }
 
@@ -92,12 +89,15 @@ static error_t init_tasks()
         return error;
     }
 
-    error = init_log();
+    error = input_task_init();
     if (error) {
         return error;
     }
 
-    error = input_task_init();
+    system_timer_init();
+    system_timer_start();
+
+    error = display_task_init();
     if (error) {
         return error;
     }
@@ -123,8 +123,6 @@ void main()
     if (error) {
         while(1);
     }
-
-    log_info("TEST %u", 1);
 
     task_manager_start();
 }

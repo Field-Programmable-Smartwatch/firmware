@@ -99,6 +99,9 @@ void input_task_entry()
 {
     error_t error;
 
+    bool display_touched = false;
+    uint32_t no_touch_threshold = 0;
+
     while (g_input_task_running) {
         uint8_t touch_not_detected = 1;
         input_event_t event = {0};
@@ -107,6 +110,16 @@ void input_task_entry()
 
         gpio_read(g_int_pin_handle, &touch_not_detected);
         if (touch_not_detected) {
+            if (display_touched) {
+                if (no_touch_threshold > 10000) {
+                    event.valid = true;
+                    event.type = 1;
+                    no_touch_threshold = 0;
+                    display_touched = false;
+                    queue_push(g_input_queue, (void *)&event);
+                }
+                no_touch_threshold++;
+            }
             continue;
         }
 
@@ -119,6 +132,14 @@ void input_task_entry()
         event.type = event_flag;
         event.x = x;
         event.y = y;
+
+        if (event.type != 1) {
+            display_touched = true;
+        } else {
+            display_touched = false;
+        }
+
+        no_touch_threshold = 0;
 
         queue_push(g_input_queue, (void *)&event);
     }

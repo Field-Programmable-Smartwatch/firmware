@@ -1,6 +1,7 @@
 #include <libraries/log.h>
 #include <libraries/input.h>
 #include <libraries/string.h>
+#include <libraries/graphics.h>
 
 extern uint32_t _sidata[];
 extern uint32_t _sdata[];
@@ -19,12 +20,28 @@ void main()
     memset(_sbss, 0, bss_section_size*4);
 
     error_t error;
-    input_event_t event = {0};
+    bool display_touched = false;
+    rectangle_t rect = (rectangle_t){.x = 0, .y = 0, .width = 240, .height = 240};
+
+    graphics_init(240, 240);
+    graphics_draw_rectangle(rect, COLOR_BLUE);
+
     while(1) {
+        input_event_t event = {0};
         error = input_poll(&event);
         if (error || !event.valid) {
             continue;
         }
         log_info("Event received: type:%u x:%u y:%u", event.type, event.x, event.y);
+
+        if ((event.type == 0 || event.type == 2) && !display_touched) {
+            log_info("Draw red");
+            graphics_draw_rectangle(rect, COLOR_RED);
+            display_touched = true;
+        } else if (event.type == 1 && display_touched) {
+            log_info("Draw blue");
+            graphics_draw_rectangle(rect, COLOR_BLUE);
+            display_touched = false;
+        }
     }
 }

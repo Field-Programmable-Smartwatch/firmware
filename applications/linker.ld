@@ -47,15 +47,16 @@
 ENTRY(main)
 
 /* Highest address of the user mode stack */
-_estack = 0x20030000;    /* end of RAM */
+_estack = 0x20004000;    /* end of RAM */
+_framebuffer_start = 0x20004004;
+_framebuffer_end = 0x20030000;
 /* Generate a link error if the stack don't fit into RAM */
 _Min_Stack_Size = 0x500;   /* required amount of stack */
-
 /* Specify the memory areas */
 MEMORY
 {
 FLASH (rx)                 : ORIGIN = 0x08010000, LENGTH = 448K
-RAM1 (xrw)                 : ORIGIN = 0x20020004, LENGTH = 0x1fffc
+RAM1 (xrw)                 : ORIGIN = 0x20002004, LENGTH = 0x1ffc
 }
 
 /* Define output sections */

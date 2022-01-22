@@ -16,7 +16,7 @@ LDFLAGS ?= --omagic -static
 DEPDIR = .deps/
 
 KERNEL_LINKER_SCRIPT = ./kernel/linker.ld
-KERNEL_SOURCE = $(wildcard ./kernel/*.c) $(wildcard ./kernel/tasks/*.c)
+KERNEL_SOURCE = $(wildcard ./kernel/*.c) $(wildcard ./kernel/*/*.c)
 KERNEL_OBJECTS = $(patsubst %.c,%.o,$(KERNEL_SOURCE))
 
 LIB_SOURCE = $(wildcard ./libraries/*.c) $(wildcard $(SEAMOS_PATH)/libraries/*.c)
@@ -59,12 +59,9 @@ hello_app.elf: $(HELLO_APP_OBJECTS) lib.a $(APP_LINKER_SCRIPT)
 clean:
 	rm -rf $(DEPDIR) $(KERNEL_OBJECTS) $(LIB_OBJECTS) $(HELLO_APP_OBJECTS) *.bin *.elf *.a
 
-.PHONY: flash_kernel
-flash_kernel:
-	dfu-util -a 0 -i 0 -s 0x08000000:leave -D kernel.bin
-
-.PHONY:flash_app
-flash_app:
-	dfu-util -a 0 -i 0 -s 0x08010000:leave -D hello_app.bin
+.PHONY: flash
+flash:
+	st-flash write hello_app.bin 0x08010000
+	st-flash write kernel.bin 0x08000000
 
 include $(DEPENDS)
