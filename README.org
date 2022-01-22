@@ -23,15 +23,12 @@ make COMPILER=[COMPILER PATH] SEAMOS_PATH=[SEAMOS PATH]
 #+END_SRC
 
 ** How to Flash the bootloader to the smartwatch
-Reset the STM32 board while the boot pin is high. Then connect the
-device to the computer via USB and run the following command:
+Plug the stlink into the correct SWD pins and run the following make
+target:
 
 #+BEGIN_SRC
-make flash_kernel
+make flash
 #+END_SRC
 
-Follow the same steps detailed above and run the following command
-
-#+BEGIN_SRC
-make flash_app
-#+END_SRC
+NOTE: A reset is required since the board will hard fault after
+flashing the app to memory
