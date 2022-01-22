@@ -1,6 +1,6 @@
 * Firmware
 This repository contains source code for the firmware and application
-code foir the Field-Programmable Smartwatch project.
+code of the Field-Programmable Smartwatch project.
 
 ** Directory Structure
 #+BEGIN_SRC
