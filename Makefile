@@ -30,7 +30,9 @@ DEPENDS = $(patsubst %.c,$(DEPDIR)/%.d,$(KERNEL_SOURCE)) \
           $(patsubst %.c,$(DEPDIR)/%.d,$(LIB_SOURCE)) \
           $(patsubst %.c,$(DEPDIR)/%.d,$(HELLO_APP_SOURCE))
 
-.SECONDARY: os.elf lib.elf hello_app.elf
+
+
+.SECONDARY: kernel.elf hello_app.elf
 all: kernel.bin lib.a hello_app.bin
 
 .PHONY: $(SEAMOS_LIB)

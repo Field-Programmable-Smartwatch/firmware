@@ -3,7 +3,6 @@
 #include <kernel/task/task_manager.h>
 #include <kernel/tasks/app_task.h>
 
-
 error_t app_task_init()
 {
     task_handle_t app_handle;
